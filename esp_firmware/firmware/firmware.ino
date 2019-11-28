@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include "esp_types.h"
 #include "Device.h"
+#include <GDBStub.h>
 
-#define DEVICE_ID 1 // unique ID for each ESP chip
 #define MAX_CHANNEL 13 // max wifi channel
 
 int current_channel = 0;
@@ -12,15 +12,17 @@ void process_beacon(uint8_t *buf, uint16_t len) {
   const MacHeader *mac = (MacHeader *) &pkt->mac;
 
   Device* src_dev = Device::Lookup(mac->src_addr);
-
   uint8_t ssid_len = pkt->buf[15];
 
   // if valid SSID length, extract SSID. I'm not sure if this is STRICTLY correct to the standard but it'll do for now
   if (ssid_len <= 32) {
+    
     int i;    
     for (i=0; i<ssid_len; i++) src_dev->ssid[i] = pkt->buf[16+i];
     for (i=i; i<32; i++) src_dev->ssid[i] = 0x0;
   }
+
+  src_dev->is_ap = 1;
 
   int16_t rssi = pkt->rx_ctrl.rssi;
   src_dev->rssi_total += (0 - rssi);
@@ -40,10 +42,8 @@ void process_client(uint8_t *buf, uint16_t len) {
   src_dev->rssi_total += (0 - rssi);
   src_dev->rssi_count++;
 
-  src_dev->packet_count[dst_dev->id]++;
-
   uint16_t pkt_len = pkt->lenseq[0].len; // TODO: Do more research on 802.11 frame to make sure this is right..
-  src_dev->data_total[dst_dev->id] += pkt_len; 
+  src_dev->AddPacket(dst_dev->id, pkt_len);
 }
 
 // len <= 12 -> RC Control (???)
@@ -62,6 +62,7 @@ void rxcb(uint8_t *buf, uint16_t len) {
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
+  gdbstub_init();
 
   wifi_set_opmode(STATION_MODE);
   wifi_promiscuous_enable(0);
@@ -88,6 +89,7 @@ void loop() {
 
   if (timePassed > 500) {
     timePassed = 0;
-    Device::DumpAll();
+    Device::WriteAll();
+    Device::Clear();
   }
 }
