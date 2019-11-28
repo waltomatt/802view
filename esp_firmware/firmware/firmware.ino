@@ -1,63 +1,15 @@
 #include <ESP8266WiFi.h>
-#include "esp_types.h"
-#include "Device.h"
 #include <GDBStub.h>
+
+#include "Device.h"
+#include "Frame.h"
+
 
 #define MAX_CHANNEL 13 // max wifi channel
 
 int current_channel = 0;
 
-void process_beacon(uint8_t *buf, uint16_t len) {
-  const rx_beacon *pkt = (rx_beacon *) buf;
-  const MacHeader *mac = (MacHeader *) &pkt->mac;
 
-  Device* src_dev = Device::Lookup(mac->src_addr);
-  uint8_t ssid_len = pkt->buf[15];
-
-  // if valid SSID length, extract SSID. I'm not sure if this is STRICTLY correct to the standard but it'll do for now
-  if (ssid_len <= 32) {
-    
-    int i;    
-    for (i=0; i<ssid_len; i++) src_dev->ssid[i] = pkt->buf[16+i];
-    for (i=i; i<32; i++) src_dev->ssid[i] = 0x0;
-  }
-
-  src_dev->is_ap = 1;
-
-  int16_t rssi = pkt->rx_ctrl.rssi;
-  src_dev->rssi_total += (0 - rssi);
-  src_dev->rssi_count++;
-  
-}
-
-void process_client(uint8_t *buf, uint16_t len) {
-  const rx_client *pkt = (rx_client *) buf;
-  const MacHeader *mac = (MacHeader *) &pkt->mac;
-
-  Device* src_dev = Device::Lookup(mac->src_addr);
-  Device* dst_dev = Device::Lookup(mac->dst_addr);
-  
-
-  int16_t rssi = pkt->rx_ctrl.rssi;
-  src_dev->rssi_total += (0 - rssi);
-  src_dev->rssi_count++;
-
-  uint16_t pkt_len = pkt->lenseq[0].len; // TODO: Do more research on 802.11 frame to make sure this is right..
-  src_dev->AddPacket(dst_dev->id, pkt_len);
-}
-
-// len <= 12 -> RC Control (???)
-// len == 128 -> BEACON
-// len else -> Client frame
-void rxcb(uint8_t *buf, uint16_t len) {
-  if (len <= 12) return; // invalid/incomplete frame
-  if (len == 128) {
-    process_beacon(buf, len);
-
-  } else {
-    process_client(buf, len);
-  }
-}
 
 void setup() {
   // put your setup code here, to run once:
@@ -67,7 +19,7 @@ void setup() {
   wifi_set_opmode(STATION_MODE);
   wifi_promiscuous_enable(0);
   WiFi.disconnect();
-  wifi_set_promiscuous_rx_cb(rxcb);
+  wifi_set_promiscuous_rx_cb(process_frame);
   wifi_set_channel(0);
   wifi_promiscuous_enable(1);
 

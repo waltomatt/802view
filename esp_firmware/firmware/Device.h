@@ -23,6 +23,9 @@ class Device {
         uint16_t rssi_total;
         uint8_t rssi_count;
 
+        // bit mask for which channels (bits 0-15 indicate channels 0-15)
+        uint16_t channels;
+
         uint8_t device_count;
         
         Destination* dests; // linked list of packet destinations
@@ -60,6 +63,8 @@ Device::Device(const uint8_t *mac) {
     
     this->rssi_total = 0;
     this->rssi_count = 0;
+
+    this->channels = 0;
 
     this->device_count = 0;
     this->dests = NULL;
@@ -137,6 +142,7 @@ void Device::Clear() {
 
     Device::head = NULL;
     Device::tail = NULL;
+    Device::count = 0;
 }
 
 void Device::AddPacket(uint16_t dst_id, uint16_t len) {
@@ -166,6 +172,8 @@ void Device::AddPacket(uint16_t dst_id, uint16_t len) {
             this->dests = found;
         else
             search->next = found;
+
+        this->device_count++;
     }
 
     found->count++;
@@ -202,6 +210,7 @@ void Device::Write() {
         len += sizeof(this->ssid);
 
     len += (this->device_count * 5); // 5 bytes for each destination
+
 
     Serial.write(header, 3);
     Serial.write(len);
