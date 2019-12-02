@@ -31,7 +31,7 @@ struct RxControl {
 };
 
 struct FrameControl {
-    unsigned protocol:1; // always 0
+    unsigned protocol:2; // always 0
     unsigned type:2; // 00=mgmt,01=ctrl,10=data
     unsigned subtype:4; // 1000: beacon
     unsigned to_ds:1; // To distribution system (ap)
@@ -45,23 +45,24 @@ struct FrameControl {
 };
 
 struct MacHeader {
-    struct FrameControl ctrl;
-    uint16_t duration_id;
-
+    struct FrameControl ctrl[1];
     uint8_t addr1[6];
     uint8_t addr2[6];
     uint8_t addr3[6];
 };
 
+struct LenSeq{
+  uint16_t len; // length of packet
+  uint16_t seq; // serial number of packet, the high 12bits are serial number, low 14 bits are Fragment number (usually be 0)
+  uint8_t addr3[6]; // the third address in packet
+};
 
 struct DataFrame {
     struct RxControl rx;
     struct MacHeader mac;
-    uint8_t buffer[14]; // stuff in the header we don't need
-    uint16_t count;
-    uint16_t length;
-    uint16_t seq;
-    uint8_t addr4[6];
+    uint8_t buffer[12]; // stuff in the header we don't need
+    uint16_t cnt; // how many packets are in this buffer (it groups em together)
+    struct LenSeq lenseq[1];
 };
 
 struct MgmtFrame {
@@ -83,11 +84,13 @@ void process_channels(Device* dev, uint8_t channel) {
     dev->channels = (dev->channels & (0x1 << channel + 1));
 }
 
-void process_mgmt(uint8_t *buffer, uint8_t len) {
+void process_mgmt(uint8_t *buffer, uint8_t len) {    
     const MgmtFrame *frame = (MgmtFrame *)buffer;
     const MacHeader *mac = (MacHeader*) &(frame->mac);
 
-    if (mac->ctrl.subtype != 8) return; // we only wanna process beacon frames
+    Debug::Print("BEACON ");
+    Debug::PrintMac(mac->addr2);
+    Debug::Print("\n");
 
     // We have a beacon frame from an access point
     // Broadcasting info about it
@@ -96,19 +99,23 @@ void process_mgmt(uint8_t *buffer, uint8_t len) {
     Device *ap = Device::Lookup(mac->addr2);
 
     if (ap != NULL) {
-        uint8_t ssid_length = frame->buf[15];
+        uint8_t tag_number = frame->buf[12];
+        uint8_t ssid_length = frame->buf[13];
 
         // check valid SSID
-        if (ssid_length > 0 && ssid_length < 32) {
+        if (tag_number == 0x0 && ssid_length > 0 && ssid_length < 32) {
             // set SSID, following by null bytes
             int i;
-            for (int i=0; i<ssid_length; i++) ap->ssid[i] = frame->buf[16 + i];
+            for (int i=0; i<ssid_length; i++) ap->ssid[i] = frame->buf[14 + i];
             for (i=i; i<32; i++) ap->ssid[i] = 0x0;
+
+            ap->is_ap = 1;
         } 
+
     }
 
     // We are an AP
-    ap->is_ap = 1;
+    
 
     // Update RSSI & channels
     process_rssi(ap, frame->rx.rssi);
@@ -119,18 +126,20 @@ void process_data(uint8_t *buffer, uint8_t len) {
     const DataFrame *frame = (DataFrame *)buffer;
     const MacHeader *mac = (MacHeader*) &(frame->mac);
 
+    if (frame->cnt < 1) return; // no good packets here
+
     Device *src;
     Device *dst;
 
-    if (mac->ctrl.to_ds && mac->ctrl.from_ds) {
+    if (mac->ctrl[0].to_ds && mac->ctrl[0].from_ds) {
         // BRIDGE
         dst = Device::Lookup(mac->addr1);
         src = Device::Lookup(mac->addr2);
-    } else if (!mac->ctrl.from_ds && mac->ctrl.to_ds) {
+    } else if (!mac->ctrl[0].from_ds && mac->ctrl[0].to_ds) {
         // frame heading towards distribution system (ap)
         src = Device::Lookup(mac->addr2);
         dst = Device::Lookup(mac->addr3);
-    } else if (mac->ctrl.from_ds && !mac->ctrl.to_ds) {
+    } else if (mac->ctrl[0].from_ds && !mac->ctrl[0].to_ds) {
         // frame coming from distribution system (ap)
         dst = Device::Lookup(mac->addr1);
         src = Device::Lookup(mac->addr3);
@@ -140,14 +149,23 @@ void process_data(uint8_t *buffer, uint8_t len) {
         src = Device::Lookup(mac->addr2);
     }
 
+
     if (src != NULL && dst != NULL) {
+
+        Debug::Print("DATA ");
+        Debug::PrintMac(src->mac);
+        Debug::Print(" -> ");
+        Debug::PrintMac(dst->mac);
+        Debug::Print("\n");
 
         // Update RSSI & channels
         process_rssi(src, frame->rx.rssi);
         process_channels(src, frame->rx.channel);
         process_channels(dst, frame->rx.channel);
 
-        src->AddPacket(dst->id, frame->length);
+        src->AddPacket(dst->id, frame->lenseq[0].len);
+        if (frame->cnt == 2)
+            src->AddPacket(dst->id, frame->lenseq[1].len);
 
     }
 }

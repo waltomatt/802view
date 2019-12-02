@@ -1,15 +1,15 @@
 #include <ESP8266WiFi.h>
 #include <GDBStub.h>
 
+#include "Debug.h"
 #include "Device.h"
 #include "Frame.h"
 
 
 #define MAX_CHANNEL 13 // max wifi channel
+#define WRITE_DELAY 1500 // wait 1.5s between transmissions
 
 int current_channel = 0;
-
-
 
 void setup() {
   // put your setup code here, to run once:
@@ -39,7 +39,7 @@ void loop() {
   timePassed+= 10;
   switch_channel();
 
-  if (timePassed > 500) {
+  if (timePassed > WRITE_DELAY) {
     timePassed = 0;
     Device::WriteAll();
     Device::Clear();

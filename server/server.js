@@ -10,18 +10,17 @@ const port = new SerialPort("/dev/ttyUSB0", {
 })
 
 
+
 const parser = port.pipe(new PacketDecoder({delimiter: header}))
 
 parser.on("data", (data) => {
 
     let offset = 0;
     let obj = {}
-    console.log(data)
+
     let size = data.readUInt8(offset++);
 
-
-    console.log(size, data.length);
-   // if (size - header.length == data.length) { // basic size check for packet validation
+    if (size - header.length == data.length) { // basic size check for packet validation
         // might add a checksum at the end
         obj.size = size
         obj.sniffer_id = data.readUInt8(offset++)
@@ -51,7 +50,20 @@ parser.on("data", (data) => {
         }
 
         obj.device_count = (data.readUInt8(offset++))
+        obj.destinations = {}
 
+        for (let i=0; i<obj.device_count; i++) {
+            let dst = data.readUInt16BE(offset)
+            offset += 2;
+
+            let count = data.readUInt8(offset++)
+
+            let bytes = data.readUInt16BE(offset)
+            offset +=2;
+
+            obj.destinations[dst] = {count: count, data: bytes}
+        }
         console.log(obj)
-   // }
+    }
+
 })

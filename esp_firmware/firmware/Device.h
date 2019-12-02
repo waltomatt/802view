@@ -123,6 +123,8 @@ Device* Device::Lookup(const uint8_t *mac) {
 void Device::WriteAll() {
     Device* search = Device::head;
 
+    Debug::Print("DUMPING! \n");
+
     while (search != NULL) {
         search->Write();
         search = search->next;
@@ -211,6 +213,10 @@ void Device::Write() {
 
     len += (this->device_count * 5); // 5 bytes for each destination
 
+    Debug::PrintMac(this->mac);
+    Debug::Print("\n");
+
+    if (DEBUG) return;
 
     Serial.write(header, 3);
     Serial.write(len);
@@ -232,7 +238,19 @@ void Device::Write() {
 
     Serial.write(this->device_count);
 
-    // THEN WRITE destinations!
+    Destination* dst = this->dests;
+
+    while (dst != NULL) {
+        Serial.write((dst->dst >> 8) & 0xFF); // send upper byte first
+        Serial.write((dst->dst & 0xFF)); // then lower byte
+
+        Serial.write(dst->count);
+        
+        Serial.write((dst->data >> 8) & 0xFF); // send upper byte first
+        Serial.write((dst->data & 0xFF)); // then lower byte
+
+        dst = dst->next;
+    } 
 }
 
 
