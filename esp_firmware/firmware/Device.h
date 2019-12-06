@@ -31,7 +31,7 @@ class Device {
         Destination* dests; // linked list of packet destinations
 
         uint8_t is_ap;
-        char ssid[32];
+        uint8_t ssid[32];
 
         Device* next; 
 
@@ -124,11 +124,16 @@ void Device::WriteAll() {
     Device* search = Device::head;
 
     Debug::Print("DUMPING! \n");
+    
 
     while (search != NULL) {
         search->Write();
         search = search->next;
     }
+
+    Serial.write(header, 3);
+    Serial.write(deviceID);
+    Serial.write(0x0);
 }
 
 // remove all the devices
@@ -218,37 +223,30 @@ void Device::Write() {
 
     if (DEBUG) return;
 
-    Serial.write(header, 3);
-    Serial.write(len);
-    Serial.write(deviceID);
+    Data_SendBuffer(const_cast<uint8_t*>(header), 3);
+    Data_SendInt8(len);
+    Data_SendInt8(deviceID);
+    Data_SendInt16(this->id);
 
-    Serial.write((this->id >> 8) & 0xFF); // send upper byte first
-    Serial.write((this->id & 0xFF)); // then lower byte
+    Data_SendBuffer(const_cast<uint8_t*>(this->mac), 6); // write 6 byte mac address
 
-    Serial.write(this->mac, 6); // write 6 byte mac address
+    Data_SendInt16(this->rssi_total);
+    Data_SendInt8(this->rssi_count);
+    Data_SendInt8(this->is_ap);
 
-    Serial.write((this->rssi_total >> 8) & 0xFF);
-    Serial.write((this->rssi_total & 0xFF));
-
-    Serial.write(this->rssi_count);
-    Serial.write(this->is_ap);
-
-    if (this->is_ap)
-        Serial.write(this->ssid, 32); // write 32 byte SSID
-
-    Serial.write(this->device_count);
+    if (this->is_ap) {
+        Data_SendBuffer(this->ssid, 32); // write 32 byte SSID
+    }
+        
+    Data_SendInt8(this->device_count);
 
     Destination* dst = this->dests;
 
     while (dst != NULL) {
-        Serial.write((dst->dst >> 8) & 0xFF); // send upper byte first
-        Serial.write((dst->dst & 0xFF)); // then lower byte
-
-        Serial.write(dst->count);
+        Data_SendInt16(dst->dst);
+        Data_SendInt8(dst->count);
         
-        Serial.write((dst->data >> 8) & 0xFF); // send upper byte first
-        Serial.write((dst->data & 0xFF)); // then lower byte
-
+        Data_SendInt16(dst->data);
         dst = dst->next;
     } 
 }

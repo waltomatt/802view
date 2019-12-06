@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <GDBStub.h>
 
+#include "Data.h"
 #include "Debug.h"
 #include "Device.h"
 #include "Frame.h"
@@ -13,7 +14,7 @@ int current_channel = 0;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
+  Serial.begin(38400);
   gdbstub_init();
 
   wifi_set_opmode(STATION_MODE);
@@ -44,4 +45,6 @@ void loop() {
     Device::WriteAll();
     Device::Clear();
   }
+
+  Data_DoSend();
 }

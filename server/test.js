@@ -1,7 +1,0 @@
-let test = new Buffer([0x44, 0x12, 0x0a, 0xFF, 0x69, 0xFF, 0x04, 0x69, 0x69, 0x69])
-let header = new Buffer([0xFF, 0x69, 0xFF])
-
-let pos = test.indexOf(header)
-console.log(pos)
-test = test.slice(pos + 3, test.length)
-console.log(test[0])

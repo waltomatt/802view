@@ -88,38 +88,40 @@ void process_mgmt(uint8_t *buffer, uint8_t len) {
     const MgmtFrame *frame = (MgmtFrame *)buffer;
     const MacHeader *mac = (MacHeader*) &(frame->mac);
 
-    Debug::Print("BEACON ");
-    Debug::PrintMac(mac->addr2);
-    Debug::Print("\n");
+    // check for beacon frame
+    if (mac->ctrl[0].subtype == 0x8) { 
 
-    // We have a beacon frame from an access point
-    // Broadcasting info about it
-    // addr2 will be source address
+        Debug::Print("BEACON ");
+        Debug::PrintMac(mac->addr2);
+        Debug::Print("\n");
 
-    Device *ap = Device::Lookup(mac->addr2);
+        // We have a beacon frame from an access point
+        // Broadcasting info about it
+        // addr2 will be source address
 
-    if (ap != NULL) {
-        uint8_t tag_number = frame->buf[12];
-        uint8_t ssid_length = frame->buf[13];
+        Device *ap = Device::Lookup(mac->addr2);
 
-        // check valid SSID
-        if (tag_number == 0x0 && ssid_length > 0 && ssid_length < 32) {
-            // set SSID, following by null bytes
-            int i;
-            for (int i=0; i<ssid_length; i++) ap->ssid[i] = frame->buf[14 + i];
-            for (i=i; i<32; i++) ap->ssid[i] = 0x0;
+        if (ap != NULL) {
+            uint8_t tag_number = frame->buf[12];
+            uint8_t ssid_length = frame->buf[13];
+
+            // check valid SSID
+            if (tag_number == 0x0 && ssid_length < 32) {
+                if (ssid_length > 0) {
+                    // set SSID, following by null bytes
+                    int i;
+                    for (int i=0; i<ssid_length; i++) ap->ssid[i] = frame->buf[14 + i];
+                    for (i=i; i<32; i++) ap->ssid[i] = 0x0;
+                }
+            } 
 
             ap->is_ap = 1;
-        } 
+        }        
 
+        // Update RSSI & channels
+        process_rssi(ap, frame->rx.rssi);
+        process_channels(ap, frame->rx.channel);
     }
-
-    // We are an AP
-    
-
-    // Update RSSI & channels
-    process_rssi(ap, frame->rx.rssi);
-    process_channels(ap, frame->rx.channel);
 }
 
 void process_data(uint8_t *buffer, uint8_t len) {
@@ -128,45 +130,32 @@ void process_data(uint8_t *buffer, uint8_t len) {
 
     if (frame->cnt < 1) return; // no good packets here
 
-    Device *src;
-    Device *dst;
+    if (mac->ctrl[0].type == 0x2) { // only data frames
 
-    if (mac->ctrl[0].to_ds && mac->ctrl[0].from_ds) {
-        // BRIDGE
-        dst = Device::Lookup(mac->addr1);
-        src = Device::Lookup(mac->addr2);
-    } else if (!mac->ctrl[0].from_ds && mac->ctrl[0].to_ds) {
-        // frame heading towards distribution system (ap)
-        src = Device::Lookup(mac->addr2);
-        dst = Device::Lookup(mac->addr3);
-    } else if (mac->ctrl[0].from_ds && !mac->ctrl[0].to_ds) {
-        // frame coming from distribution system (ap)
-        dst = Device::Lookup(mac->addr1);
-        src = Device::Lookup(mac->addr3);
-    } else {
-        // Independent BSS
-        dst = Device::Lookup(mac->addr1);
-        src = Device::Lookup(mac->addr2);
-    }
+        // get the transmitter & receiver address
+
+        Device *src = Device::Lookup(mac->addr1);
+        Device *dst = Device::Lookup(mac->addr2);
 
 
-    if (src != NULL && dst != NULL) {
+        if (src != NULL && dst != NULL) {
 
-        Debug::Print("DATA ");
-        Debug::PrintMac(src->mac);
-        Debug::Print(" -> ");
-        Debug::PrintMac(dst->mac);
-        Debug::Print("\n");
+            Debug::Print("DATA ");
+            Debug::PrintMac(src->mac);
+            Debug::Print(" -> ");
+            Debug::PrintMac(dst->mac);
+            Debug::Print("\n");
 
-        // Update RSSI & channels
-        process_rssi(src, frame->rx.rssi);
-        process_channels(src, frame->rx.channel);
-        process_channels(dst, frame->rx.channel);
+            // Update RSSI & channels
+            process_rssi(src, frame->rx.rssi);
+            process_channels(src, frame->rx.channel);
+            process_channels(dst, frame->rx.channel);
 
-        src->AddPacket(dst->id, frame->lenseq[0].len);
-        if (frame->cnt == 2)
-            src->AddPacket(dst->id, frame->lenseq[1].len);
+            src->AddPacket(dst->id, frame->lenseq[0].len);
+            if (frame->cnt == 2)
+                src->AddPacket(dst->id, frame->lenseq[1].len);
 
+        }
     }
 }
 

@@ -1,0 +1,19 @@
+{
+  "name": "802map",
+  "version": "1.0.0",
+  "description": "802.11 packet mapper, third year UoM CS project",
+  "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Matt Walton",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "serialport": "^8.0.5"
+  }
+}
