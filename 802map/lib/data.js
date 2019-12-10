@@ -1,10 +1,24 @@
 const header = Buffer.from([0xFF, 0x60, 0x55])
 
+const ignoreMacs = [
+    "FF:FF:FF:FF:FF:FF",
+    "01:80:C2:00:00:08",
+    "01:80:C2:00:00:00"
+]
+
 exports.devices = {}
 exports.current = []
-exports.updated = []
 
-console.log(header.length)
+let updatedCbs = []
+
+function insertMacColons(mac) {
+    let parts = []
+    for (let i=0; i<mac.length; i += 2) {
+        parts.push(mac.substr(i, 2))
+    }
+
+    return parts.join(":")
+}
 
 exports.handlePacket = function(data) {
     let offset = 0
@@ -25,8 +39,11 @@ exports.handlePacket = function(data) {
         obj.device_id = data.readUInt16BE(offset)
         offset += 2
 
-        obj.mac = data.slice(offset, offset + 6).toString("hex")
+        obj.mac = insertMacColons(data.slice(offset, offset + 6).toString("hex")).toUpperCase()
         offset += 6
+
+        if (obj.mac.substr(0, 8) == "01:00:5E" || obj.mac.substr(0, 5) == "33:33" || ignoreMacs.indexOf(obj.mac) != -1)
+            return // we don't want multicast addresses atm
 
         obj.rssi_total = data.readUInt16BE(offset)
         offset += 2
@@ -61,10 +78,9 @@ exports.handlePacket = function(data) {
             obj.destinations[dst] = {count: count, data: bytes}
         }
 
+
         if (!exports.current[obj.sniffer_id])
             exports.current[obj.sniffer_id] = []
-
-        console.log(exports.current)
 
         exports.current[obj.sniffer_id][obj.device_id] = obj;
     }
@@ -100,6 +116,7 @@ exports.processCurrent = function(id) {
 
     if (exports.current[id]) {
         let processed = 0;
+        let updated = []
 
         exports.current[id].forEach(obj => {
             processed++
@@ -129,7 +146,8 @@ exports.processCurrent = function(id) {
             if (obj.ssid)
                 device.ssid = obj.ssid
 
-            
+            if (updated.indexOf(obj.mac) == -1)
+                updated.push(obj.mac)
 
             let keys = Object.keys(obj.destinations)
             for (let i=0; i<keys.length; i++) {
@@ -160,8 +178,8 @@ exports.processCurrent = function(id) {
                     })
 
                     device.devices[mac] = dev_mac
-                    if (exports.updated.indexOf(mac) == -1)
-                        exports.updated.push(mac)
+                    if (updated.indexOf(mac) == -1)
+                        updated.push(mac)
                 }
             }
 
@@ -171,16 +189,15 @@ exports.processCurrent = function(id) {
             
             if (processed == exports.current[id].length) {
                 exports.current[id] = []
+                for (let i=0; i<updatedCbs.length; i++)
+                    updatedCbs[i](updated)
             }
         })
     }
 }
 
-exports.getUpdated = function() {
-    const updated = exports.updated.slice(0)
-    exports.updated = []
-
-    return updated
+exports.onUpdated = function(cb) {
+    updatedCbs.push(cb)
 }
 
 exports.header = header
