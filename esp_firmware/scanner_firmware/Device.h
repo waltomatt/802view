@@ -124,6 +124,7 @@ void device_write(uint8_t id) {
     // Write packet
     
     Serial.write(header, sizeof(header));
+    Serial.write(device_count);
     Serial.write(devices[id].id);
     
     Serial.write(devices[id].mac, 6);

@@ -17,7 +17,7 @@ const char wifi_ssid[]= "why_fi?";
 const char wifi_pass[] = "HowHardCanItBe?321";
 const char device_id[] = "1";
 const char secret[] = "agoodsecret123";
-const char host[] = "192.168.5.31";
+const char host[] = "project-api.hatt.co";
 int port = 8082;
 
 bool ws_connected = false;
@@ -41,8 +41,11 @@ void authenticate() {
   doc["i"] = device_id;
 
   sendJSON(doc);
-
+  
+  Serial.begin(115200);
+  Serial.setTimeout(200);
   ws_connected = true;
+    
 }
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
@@ -50,6 +53,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     authenticate();
   } else if (type == WStype_DISCONNECTED) {
     ws_connected = false;
+    Serial.end();
   }
 }
 
@@ -84,6 +88,7 @@ void receiveData() {
   // read from the serial port
   // wait for length
 
+  uint8_t dev_count = readByte();
   uint8_t id = readByte();
 
   unsigned char mac[6];
@@ -108,6 +113,7 @@ void receiveData() {
   size_t jsonSize = (JSON_OBJECT_SIZE(6) + JSON_ARRAY_SIZE(devs) + devs*JSON_OBJECT_SIZE(3) + 63);
   DynamicJsonDocument doc(jsonSize);
   doc["i"] = id;
+  doc["t"] = dev_count;
   doc["m"] = macStr;
   doc["r"] = rssi;
   doc["c"] = channels;
@@ -133,20 +139,16 @@ void receiveData() {
 }
 
 void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(115200);
-  Serial.setTimeout(200);
+  // put your setup code here, to run once
   
   WiFi.begin(wifi_ssid, wifi_pass);
-
-  Serial.println("Connecting");
   // wait for WiFi connection
   while(WiFi.status() != WL_CONNECTED) {
     delay(100);
   }
 
   
-  ws.begin(host, port, "/");
+  ws.begin(host, port, "/node");
   ws.onEvent(webSocketEvent);
   ws.setReconnectInterval(3000);
   
