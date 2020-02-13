@@ -1,0 +1,10 @@
+{
+    "db": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "database": "802view"
+    },
+
+    "saltRounds": 10
+}

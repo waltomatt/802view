@@ -89,44 +89,49 @@ void receiveData() {
   // wait for length
 
   uint8_t dev_count = readByte();
-  uint8_t id = readByte();
+  StaticJsonDocument<MAX_JSON_LEN> doc;
 
-  unsigned char mac[6];
-  Serial.readBytes(mac, 6);
-
-  char macStr[18]; 
-  sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-  uint16_t rssi = readUint16();
-  uint16_t channels = readUint16();
+  for (int i=0; i<dev_count; i++) {
+    uint8_t id = readByte();
   
-  boolean isAp = (readByte() == 1);
-
-  char ssid[32];
-
-  if (isAp) {
-    Serial.readBytes(ssid, 32);
-  }
-
-  uint8_t devs = readByte();
-
-  size_t jsonSize = (JSON_OBJECT_SIZE(6) + JSON_ARRAY_SIZE(devs) + devs*JSON_OBJECT_SIZE(3) + 63);
-  DynamicJsonDocument doc(jsonSize);
-  doc["i"] = id;
-  doc["t"] = dev_count;
-  doc["m"] = macStr;
-  doc["r"] = rssi;
-  doc["c"] = channels;
-  doc["a"] = isAp;
-  doc["s"] = ssid;
-
-  JsonArray connects = doc.createNestedArray("co");
-
-  for (int i=0; i<devs; i++) {
-    JsonObject dev = connects.createNestedObject();
-    dev["i"] = readByte();
-    dev["c"] = readByte();
-    dev["d"] = readUint16();
+    unsigned char mac[6];
+    Serial.readBytes(mac, 6);
+  
+    char macStr[18]; 
+    sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  
+    uint16_t rssi = readUint16();
+    uint16_t channels = readUint16();
+    
+    boolean isAp = (readByte() == 1);
+  
+    char ssid[32];
+  
+    if (isAp) {
+      Serial.readBytes(ssid, 32);
+    }
+  
+    uint8_t devs = readByte();
+  
+    JsonObject dev = doc.createNestedObject();
+    dev["i"] = id;
+    dev["t"] = dev_count;
+    dev["m"] = macStr;
+    dev["r"] = rssi;
+    dev["c"] = channels;
+    dev["a"] = isAp;
+    if (isAp) {
+      dev["s"] = ssid;
+    }
+  
+    JsonArray connects = dev.createNestedArray("co");
+  
+    for (int x=0; x<devs; x++) {
+      JsonObject dev = connects.createNestedObject();
+      dev["i"] = readByte();
+      dev["c"] = readByte();
+      dev["d"] = readUint16();
+    }
   }
 
   

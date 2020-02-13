@@ -122,9 +122,6 @@ void device_write(uint8_t id) {
     device_write_debug(id);
   } else {
     // Write packet
-    
-    Serial.write(header, sizeof(header));
-    Serial.write(device_count);
     Serial.write(devices[id].id);
     
     Serial.write(devices[id].mac, 6);
@@ -152,6 +149,8 @@ void device_write(uint8_t id) {
 }
 
 void device_write_all() {
+  Serial.write(header, 3);
+  Serial.write(device_count);
   for (int i=0; i<device_count; i++) {
     device_write(i);
   }
