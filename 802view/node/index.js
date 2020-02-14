@@ -1,6 +1,6 @@
 const crypto = require("crypto"),
     config = require("config"),
-    device = require("device")
+    device = require("device"),
     db = require("db")
 
 let online = []
@@ -21,13 +21,15 @@ function processPacket(id, msg) {
             localDevices[dev.i].ssid = dev.s
         }
 
-        for (let x=0; x<dev.co.length; x++) {
-            const con = dev.co[x]
-            localDevices[dev.i].connections.push({
-                id: con.i,
-                count: con.c,
-                data: con.d
-            })
+        if (typeof(dev.co) == "object" && dev.co.length) {
+            for (let x=0; x<dev.co.length; x++) {
+                const con = dev.co[x]
+                localDevices[dev.i].connections.push({
+                    id: con.i,
+                    count: con.c,
+                    data: con.d
+                })
+            }
         }
     }
 
@@ -46,7 +48,7 @@ function globalize(id, localDevs) {
             const con = dev.connections[x]
 
             let obj = {
-                device: localDevs[con.id].mac,
+                mac: localDevs[con.id].mac,
                 count: con.count, 
                 data: con.data
             }

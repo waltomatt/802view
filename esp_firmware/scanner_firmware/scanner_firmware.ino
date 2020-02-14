@@ -24,6 +24,7 @@ void debug_print_mac(const unsigned char *mac) {
 const uint8_t header[3] = {0xFF, 0x60, 0x55};
 
 #include "esp_types.h"
+#include "Write.h"
 #include "Device.h"
 #include "Frame.h"
 

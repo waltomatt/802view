@@ -68,12 +68,6 @@ int device_get(const uint8_t *mac) {
   }
 }
 
-// big endian 16 bit uint write
-void write_uint16(uint16_t val) {
-  Serial.write((val >> 8) & 0xFF);
-  Serial.write(val & 0xFF);
-}
-
 void device_write_debug(uint8_t id) {
   // Print everything out in a human readable format for debugging
   Serial.print("ID: ");
@@ -122,27 +116,27 @@ void device_write(uint8_t id) {
     device_write_debug(id);
   } else {
     // Write packet
-    Serial.write(devices[id].id);
+    write_uint8(devices[id].id);
     
-    Serial.write(devices[id].mac, 6);
+    write_buffer(devices[id].mac, 6);
     if (devices[id].rssi_count == 0)
       write_uint16(0);
     else
       write_uint16(devices[id].rssi_total / devices[id].rssi_count);
 
     write_uint16(devices[id].channels);
-    Serial.write(devices[id].is_ap);
+    write_uint8(devices[id].is_ap);
     
     if (devices[id].is_ap) {
-      Serial.write(devices[id].ssid, 32);
+      write_buffer(devices[id].ssid, 32);
     }
     
-    Serial.write(devices[id].conn_count);
+    write_uint8(devices[id].conn_count);
     
     for (int i=0; i<devices[id].conn_count; i++) {
       Connection conn = devices[id].connections[i];
-      Serial.write(conn.dst);
-      Serial.write(conn.count);
+      write_uint8(conn.dst);
+      write_uint8(conn.count);
       write_uint16(conn.data);
     }
   }
@@ -150,10 +144,13 @@ void device_write(uint8_t id) {
 
 void device_write_all() {
   Serial.write(header, 3);
-  Serial.write(device_count);
+  write_reset_checksum();
+  write_uint8(device_count);
+  
   for (int i=0; i<device_count; i++) {
     device_write(i);
   }
+  Serial.write(write_checksum());
 }
 
 int device_get_connection(uint8_t dev_id, uint8_t dst) {

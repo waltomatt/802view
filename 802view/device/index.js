@@ -1,4 +1,7 @@
-const db = require("db")
+const db = require("db"),
+    connections = require("device/connections"),
+    nodes = require("device/nodes")
+
 let newDevices = []
 
 function updateSSID(device) {
@@ -14,8 +17,8 @@ function updateSSID(device) {
     `, [device.mac, device.ssid])
 }
 
-function updateDevice(id, device) {
-    db.query(`
+async function updateDevice(id, device) {
+    await db.query(`
     INSERT INTO devices(
         mac, last_seen, is_ap
     ) VALUES (
@@ -24,22 +27,23 @@ function updateDevice(id, device) {
     DO
         UPDATE 
         SET last_seen=NOW(), is_ap=$2
-    `, [device.mac, device.is_ap]).then((res) => {
-        if (device.is_ap && device.ssid && device.ssid.length) {
-            updateSSID(device)
-        }
+    `, [device.mac, device.is_ap])
+    
+    
+    if (device.is_ap && device.ssid && device.ssid.length) {
+        updateSSID(device)
+    }
 
-
-    }).catch((e) => {
-        throw e
-    })
 }
 
-function updateDevices(id, devices) {
+async function updateDevices(id, devices) {
     // we now have a globalized array of devices
     for (let i=0; i<devices.length; i++) {
-        updateDevice(id, devices[i])
+        await updateDevice(id, devices[i])
     }
+
+    connections.update(devices)
+    nodes.update(id, devices)
 }
 
 exports.update = updateDevices

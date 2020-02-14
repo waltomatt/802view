@@ -66,6 +66,12 @@ uint8_t readByte() {
   return buf;
 }
 
+uint8_t readByte(unsigned char *buf, int len) {
+  for (int i=0; i<len; i++) {
+    buf[i] = readByte();
+  }
+}
+
 void resetChecksum() {
   checksum = 0;
 }
@@ -88,6 +94,7 @@ void receiveData() {
   // read from the serial port
   // wait for length
 
+  checksum = 0;
   uint8_t dev_count = readByte();
   StaticJsonDocument<MAX_JSON_LEN> doc;
 
@@ -95,7 +102,7 @@ void receiveData() {
     uint8_t id = readByte();
   
     unsigned char mac[6];
-    Serial.readBytes(mac, 6);
+    readByte(mac, 6);
   
     char macStr[18]; 
     sprintf(macStr, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
@@ -105,10 +112,10 @@ void receiveData() {
     
     boolean isAp = (readByte() == 1);
   
-    char ssid[32];
+    unsigned char ssid[32];
   
     if (isAp) {
-      Serial.readBytes(ssid, 32);
+      readByte(ssid, 32);
     }
   
     uint8_t devs = readByte();
@@ -134,13 +141,16 @@ void receiveData() {
     }
   }
 
-  
+  uint8_t chksum;
+  Serial.readBytes(&chksum, 1);
 
-  String str;
-  
-  size_t len = serializeJson(doc, str);
-  ws.sendTXT(str.c_str(), len);
+  if (checksum == chksum) {
 
+    String str;
+    
+    size_t len = serializeJson(doc, str);
+    ws.sendTXT(str.c_str(), len);
+  }
 }
 
 void setup() {

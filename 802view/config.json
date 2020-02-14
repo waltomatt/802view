@@ -6,5 +6,10 @@
         "database": "802view"
     },
 
-    "saltRounds": 10
+    "connectionUpdateInterval": 30 ,
+    "connectionExpireInterval": 300,
+    "connectionCheckInterval": 30,
+    "nodeUpdateInterval": 30,
+    "nodeExpireInterval": 180,
+    "nodeCheckInterval": 10
 }

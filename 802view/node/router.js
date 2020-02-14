@@ -14,13 +14,15 @@ router.ws("/", (ws, req) => {
             console.log("Invalid JSON in websocket")
         }
 
-        if (ws.id) {
-            node.packet(ws.id, msg)
-        } else if (msg.i && msg.s) {
-            node.authenticate(parseInt(msg.i), msg.s).then((id) => {
-                if (id)
-                    ws.id = id
-            })
+        if (msg) {
+            if (ws.id) {
+                node.packet(ws.id, msg)
+            } else if (msg.i && msg.s) {
+                node.authenticate(parseInt(msg.i), msg.s).then((id) => {
+                    if (id)
+                        ws.id = id
+                })
+            }
         }
     })
 
