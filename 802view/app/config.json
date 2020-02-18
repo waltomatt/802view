@@ -1,0 +1,17 @@
+{
+    "db": {
+        "host": "localhost",
+        "port": 5432,
+        "user": "postgres",
+        "database": "802view"
+    },
+
+    "wsKeepAliveTime": 30,
+
+    "connectionUpdateInterval": 30 ,
+    "connectionExpireInterval": 300,
+    "connectionCheckInterval": 30,
+    "nodeUpdateInterval": 30,
+    "nodeExpireInterval": 180,
+    "nodeCheckInterval": 10
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>802view</title>
+    </head>
+
+    <body>
+        <%- include("partials/nav") %>
+
+        <div class="body graph">
+            <div class="container-fluid p-0">
+                <div class="row">
+                    <div class="col-9">
+                        <div class="graph-controls p-2">
+                            <button v-show="view != 'network'" class="btn btn-primary" id="graph-control-back">Back</button>
+                        </div>
+                        <div class="graph-container">
+
+                        </div>
+                        
+                    </div>
+
+                    <div class="col-3">
+                        <div class="card mt-2" v-if="view == 'network' && selectedNode.name">
+                            <div class="card-header">
+                                Node #{{selectedNode.id}}
+                                <button type="button" class="close">
+                                    <span>&times;</span>
+                                </button>
+                            </div>
+
+                            <div class="card-body">
+                                <h5>
+                                    {{selectedNode.name}} 
+                                    <span v-if="selectedNode.online" class="badge badge-success">online</span>
+                                    <span v-if="!selectedNode.online" class="badge badge-secondary">offline</span>
+                                </h5>
+                                <p>{{selectedNode.description}}</p>
+                                <p class="m-0" v-if="selectedNode.last_seen"><strong>Last seen:</strong> {{moment(selectedNode.last_seen).fromNow()}}</p>
+                                <p class="m-0"><strong>Number of devices:</strong> {{selectedNode.devices}} ({{selectedNode.ap_count}} APs)</p>
+                                <p class="text-muted m-0 mt-3">{{selectedNode.ip}}</p>
+                            </div>
+                        </div>
+
+                        <div class="card mt-2" v-if="selectedDevice.mac">
+                            <div class="card-header">
+                                Device Information
+                            </div>
+    
+                            <div class="card-body">
+                                <h5>
+                                    {{selectedDevice.mac}} 
+                                    <span v-if="selectedDevice.is_ap" class="badge badge-secondary">AP</span>
+                                </h5>
+                                <p class="text-muted m-0">{{selectedDevice.org}}</p>
+                                <p>{{selectedDevice.label}}</p>
+                                <p class="m-0"><strong>First seen: </strong> {{moment(selectedDevice.first_seen).fromNow()}}</p>
+                                <p class="m-0" v-if="selectedDevice.last_seen"><strong>Last seen:</strong> {{moment(selectedDevice.last_seen).fromNow()}}</p>
+                            
+                                <div class="action-buttons mt-3">
+                                    <a href="#" id="device-info" class="btn btn-sm btn-secondary">More info</a>
+                                    <a v-bind:href="'/search?mac=' + selectedDevice.mac" class="btn btn-sm btn-primary">Search</a>
+                                    <a v-bind:href="'/alert?mac=' + selectedDevice.mac" class="btn btn-sm btn-warning">Create alert</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                </div>
+            </div>
+        </div>
+    </body>
+
+    <%- include("partials/includes") %>
+    <script src="/static/js/external/vis-network.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/graph.css">
+    <script src="/static/js/app/graph.js"></script>
+</html>
