@@ -13,11 +13,11 @@ WebSocketsClient ws;
 
 #define MAX_JSON_LEN 10000
 
-const char wifi_ssid[]= "why_fi?";
-const char wifi_pass[] = "HowHardCanItBe?321";
+const char wifi_ssid[]= "Matt's iPhone";
+const char wifi_pass[] = "kofismells";
 const char device_id[] = "1";
 const char secret[] = "agoodsecret123";
-const char host[] = "project-api.hatt.co";
+const char host[] = "project.hatt.co";
 int port = 8082;
 
 bool ws_connected = false;
