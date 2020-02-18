@@ -7,7 +7,7 @@ const app = express()
 const expressWs = require("express-ws")(app)
 
 app.set("view engine", "ejs")
-
+app.set("views", __dirname + "/views")
 
 console.log(__dirname)
 app.use("/static", express.static(__dirname + "/../wwwroot/static"))
