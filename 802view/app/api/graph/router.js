@@ -146,8 +146,10 @@ router.get("/devices/:nodeID", (req, res) => {
     let date = false
 
     if (req.query.date) {
-        date = new Date(req.query.date)
+        date = new Date(parseInt(req.query.date) * 1000)
     }
+
+    console.log(date)
 
     if (nodeID) {
         getDevices(nodeID, date).then((nodes) => {

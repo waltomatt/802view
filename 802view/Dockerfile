@@ -1,9 +1,7 @@
 FROM node:15
-WORKDIR /usr/src/app
+WORKDIR /usr/src/802view
 
-COPY package.json ./
-RUN npm install
 COPY . .
-EXPOSE 8080
+RUN npm install --prefix ./app
 EXPOSE 8082
 CMD ["node", "app"]

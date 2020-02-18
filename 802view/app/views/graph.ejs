@@ -11,8 +11,19 @@
             <div class="container-fluid p-0">
                 <div class="row">
                     <div class="col-9">
-                        <div class="graph-controls p-2">
-                            <button v-show="view != 'network'" class="btn btn-primary" id="graph-control-back">Back</button>
+                        <div class="graph-controls p-2 container-fluid">
+                            <div class="row">
+                                <div class="col-8">
+                                    <button v-show="view != 'network'" class="btn btn-primary" id="graph-control-back">Back</button>
+                                </div>
+                                <div class="col-4">
+                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                        <label class="btn btn-success active">
+                                            <input type="checkbox" name="live-toggle" id="live-toggle" checked> Live
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="graph-container">
 
@@ -76,4 +87,5 @@
     <script src="/static/js/external/vis-network.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/graph.css">
     <script src="/static/js/app/graph.js"></script>
+    
 </html>
