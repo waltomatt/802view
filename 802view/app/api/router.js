@@ -21,7 +21,12 @@ router.get("/device/:mac", (req, res) => {
     const mac = req.params.mac
 
     if (mac) {
-        device.getInfo(mac).then((data) => {
+        let date = false
+        if (req.query.date) {
+            date = new Date(parseInt(req.query.date) * 1000)
+        }
+
+        device.getInfo(mac, req.query.node, date).then((data) => {
             if (data) {
                 res.json(data)
             } else {

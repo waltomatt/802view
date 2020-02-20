@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <title>802view</title>
+        <%- include("partials/includes") %>
     </head>
 
     <body>
@@ -10,17 +11,19 @@
         <div class="body graph">
             <div class="container-fluid p-0">
                 <div class="row">
-                    <div class="col-9">
+                    <div class="col-8 p-0">
                         <div class="graph-controls p-2 container-fluid">
-                            <div class="row">
-                                <div class="col-8">
-                                    <button v-show="view != 'network'" class="btn btn-primary" id="graph-control-back">Back</button>
+                            <div class="row" v-show="view != 'network'">
+                                <div class="col-6 p-0">
+                                    <button class="btn btn-primary" id="graph-control-back">Back</button>
                                 </div>
-                                <div class="col-4">
-                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                                        <label class="btn btn-success active">
-                                            <input type="checkbox" name="live-toggle" id="live-toggle" checked> Live
-                                        </label>
+                                <div class="col-6 p-0">
+                                    <div class="input-group mb-3 float-right">
+                                        <div class="input-group-prepend btn-group">
+                                          <button class="btn btn-success" type="button" id="live-toggle">Live</button>
+                                        </div>
+                                        <input v-show="live" disabled class="form-control" v-bind:value="'Last updated: ' + moment(lastUpdate).fromNow()">
+                                        <input v-show="!live" type="text" class="form-control" placeholder="Select date" id="graph-control-date">
                                     </div>
                                 </div>
                             </div>
@@ -31,7 +34,7 @@
                         
                     </div>
 
-                    <div class="col-3">
+                    <div class="col-4 p-0">
                         <div class="card mt-2" v-if="view == 'network' && selectedNode.name">
                             <div class="card-header">
                                 Node #{{selectedNode.id}}
@@ -53,20 +56,75 @@
                             </div>
                         </div>
 
-                        <div class="card mt-2" v-if="selectedDevice.mac">
+                        <div class="card mt-2" v-show="selectedDevice.mac">
                             <div class="card-header">
                                 Device Information
                             </div>
     
                             <div class="card-body">
                                 <h5>
-                                    {{selectedDevice.mac}} 
+                                    <span contenteditable="true" id="device-label">{{selectedDevice.label}}</span>
                                     <span v-if="selectedDevice.is_ap" class="badge badge-secondary">AP</span>
                                 </h5>
-                                <p class="text-muted m-0">{{selectedDevice.org}}</p>
-                                <p>{{selectedDevice.label}}</p>
-                                <p class="m-0"><strong>First seen: </strong> {{moment(selectedDevice.first_seen).fromNow()}}</p>
-                                <p class="m-0" v-if="selectedDevice.last_seen"><strong>Last seen:</strong> {{moment(selectedDevice.last_seen).fromNow()}}</p>
+
+                                <p class="m-0">{{selectedDevice.mac}}</p>
+                                <p class="text-muted">{{selectedDevice.org}}</p>
+
+                                <p class="m-0" v-if="selectedDevice.is_ap && selectedDevice.ssid">
+                                    <strong>SSID: </strong> {{selectedDevice.ssid}}
+                                </p>
+
+                                <p class="m-0">
+                                    <span data-tooltip="tooltip" v-bind:title="moment(selectedDevice.first_seen).format('DD/MM/YYYY, hh:mm:ss')">
+                                        <strong>First seen: </strong> {{moment(selectedDevice.first_seen).fromNow()}}
+                                    </span>
+                                </p>
+
+                                <p class="m-0">
+                                    <span data-tooltip="tooltip" v-bind:title="moment(selectedDevice.last_seen).format('DD/MM/YYYY, hh:mm:ss')">
+                                        <strong>Last seen: </strong> {{moment(selectedDevice.last_seen).fromNow()}}
+                                    </span>
+                                </p>
+
+                                <p class="m-0" v-if="live && selectedDevice.node ">
+                                    <strong>RSSI: </strong>
+                                    <span v-if="selectedDevice.node.rssi">{{selectedDevice.node.rssi}} dB</span>
+                                    <span v-if="!selectedDevice.node.rssi">Out of range</span>
+                                </p>
+
+                                <div class="mt-3 mb-3" v-if="selectedDevice.node || selectedDevice.session">
+                                    <p class="text-muted m-0" v-if="live">Current session</p>
+                                    <p class="text-muted m-0" v-if="!live">Session</p>
+
+                                    <p class="m-0">
+                                        <strong>Start: </strong>
+                                        <span v-if="live">{{moment(selectedDevice.node.start).format('DD/MM/YYYY, hh:mm:ss')}}</span>
+                                        <span v-if="!live && selectedDevice.session">{{moment(selectedDevice.session.start).format('DD/MM/YYYY, hh:mm:ss')}}</span>
+                                    </p>
+
+                                    <p v-if="!live && selectedDevice.session" class="m-0">
+                                        <strong>End: </strong>
+                                        <span>{{moment(selectedDevice.session.end).format('DD/MM/YYYY, hh:mm:ss')}}</span>
+                                    </p>
+                                </div>
+
+                                <table class="table mt-3" v-if="selectedDevice.connections.length">
+                                    <thead>
+                                        <tr>
+                                            <th>Device</th>
+                                            <th>Packets Tx/Rx</th>
+                                            <th>Bytes Tx/Rx</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <tr v-for="con in selectedDevice.connections">
+                                            <td><a href="#" v-on:click.prevent="openDevice(con.device.id)"> {{con.device.label}}</a></td>
+                                            <td>{{con.packets_tx}} / {{con.packets_rx}}</td>
+                                            <td>{{con.bytes_tx}} / {{con.bytes_rx}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             
                                 <div class="action-buttons mt-3">
                                     <a href="#" id="device-info" class="btn btn-sm btn-secondary">More info</a>
@@ -81,10 +139,14 @@
                 </div>
             </div>
         </div>
+
+        <%- include("partials/device") %>
     </body>
 
-    <%- include("partials/includes") %>
+    
     <script src="/static/js/external/vis-network.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/flatpickr.min.css">
+    <script src="/static/js/external/flatpickr.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/graph.css">
     <script src="/static/js/app/graph.js"></script>
     

@@ -1,0 +1,48 @@
+<div class="modal fade" id="device-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {{device.mac}}
+                    <span v-if="device.is_ap" class="badge badge-secondary">AP</span>
+                </h5>
+            </div>
+
+            <div class="modal-body">
+                <button v-if="history.length" type="button" class="btn btn-secondary">Back</button>
+
+                <div class="row">
+                    <div class="col-5 p-0">
+                        <h5 v-if="!editLabel"> 
+                            <span >{{device.label}}</span>
+                        </h5>
+                        <input v-if="editLabel" v-model="device.label" class="form-control form-control-sm" id="label-input">
+                    </div>
+
+                    <div class="col-3 p-0 pl-1">
+                        <button v-if="editLabel" class="btn btn-sm btn-primary" v-on:click="saveLabel">Save</button>
+                        <button v-if="!editLabel" class="btn btn-sm btn-primary" v-on:click="editLabel=true">Edit label</button>
+                    </div>
+                </div>
+
+                <p class="m-0 mt-2">{{device.mac}}</p>
+                <p class="text-muted m-0">{{device.org}}</p>
+                
+                <div class="row mt-2">
+                    <div class="col-md-6 p-0">
+                        <strong>First seen: </strong>{{moment(device.first_seen).format("DD/MM/YYYY hh:mm:ss")}}
+                    </div>
+                    <div class="col-md-6 p-0">
+                        <strong>Last seen: </strong>{{moment(device.last_seen).format("DD/MM/YYYY hh:mm:ss")}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="/static/js/app/device.js"></script>

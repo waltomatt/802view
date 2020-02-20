@@ -56,7 +56,7 @@ async function updateDevices(id, devices) {
     nodes.update(id, devices)
 }
 
-async function getInfo(mac) {
+async function getInfo(mac, node, date) {
     let {rows} = await db.query(`
     SELECT d.label, d.last_seen, d.is_ap, d.mac, d.first_seen,
         (SELECT ssid FROM device_ssids s WHERE s.device=$1)
@@ -68,11 +68,15 @@ async function getInfo(mac) {
 
     if (rows && rows.length) {
         obj = {
-            label: rows[0].label,
+            label: rows[0].label || rows[0].mac,
             mac: rows[0].mac,
             first_seen: rows[0].first_seen,
             last_seen: rows[0].last_seen,
-            is_ap: rows[0].is_ap
+            is_ap: rows[0].is_ap,
+            ssid: false,
+            node: false,
+            session: false,
+            org: false
         }
 
         if (rows[0].ssid)
@@ -81,6 +85,14 @@ async function getInfo(mac) {
         obj.org = oui(obj.mac)
         if (obj.org)
             obj.org = obj.org.split("\n")[0]
+
+        if (node) {
+            obj.node = nodes.getActive(parseInt(node), mac)
+        }
+
+        if (date) {
+            obj.session = await nodes.getSession(parseInt(node), mac, date)
+        }
 
         return obj
     } else {

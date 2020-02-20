@@ -78,13 +78,13 @@ async function getDevices(nodeID, date) {
         device.is_ap = rows[i].is_ap   
 
         if (device.is_ap) {
-            if (rows[i].ssid) {
+            if (rows[i].ssid && !rows[i].label) {
                 device.label = rows[i].ssid
             }
 
-            device.shape = "box"
-        } else {
             device.shape = "circle"
+        } else {
+            device.shape = "box"
         }
         
         
@@ -96,7 +96,7 @@ async function getDevices(nodeID, date) {
 
 async function getActiveConnections(nodeID) {
     let {rows} = await db.query(`
-    SELECT id, src, dst, up_data, down_data FROM connections 
+    SELECT id, src, dst, up_data, down_data, up_packets, down_packets FROM connections 
     WHERE active=true AND
         (src IN (SELECT device FROM node_devices WHERE node=$1) OR
          dst IN (SELECT device FROM node_devices WHERE node=$1))
@@ -107,7 +107,7 @@ async function getActiveConnections(nodeID) {
 
 async function getConnectionsDate(nodeID, date) {
     let {rows} = await db.query(`
-    SELECT id, src, dst, up_data, down_data FROM connections 
+    SELECT id, src, dst, up_data, down_data, up_packets, down_packets FROM connections 
     WHERE start_time < $1 AND end_time > $1 AND
         (src IN (SELECT device FROM node_devices WHERE node=$2) OR
          dst IN (SELECT device FROM node_devices WHERE node=$2))
@@ -133,7 +133,11 @@ async function getConnections(nodeID, date) {
             id: rows[i].id,
             from: rows[i].src,
             to: rows[i].dst,
-            value: (rows[i].up_data + rows[i].down_data)
+            value: (rows[i].up_data + rows[i].down_data),
+            up_data: rows[i].up_data,
+            down_data: rows[i].down_data,
+            up_packets: rows[i].up_packets,
+            down_packets: rows[i].down_packets
         })
     }
 
@@ -148,8 +152,6 @@ router.get("/devices/:nodeID", (req, res) => {
     if (req.query.date) {
         date = new Date(parseInt(req.query.date) * 1000)
     }
-
-    console.log(date)
 
     if (nodeID) {
         getDevices(nodeID, date).then((nodes) => {

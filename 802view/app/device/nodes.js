@@ -109,7 +109,9 @@ async function newDevice(id, dev) {
 
 function updateDevice(id, dev) {
     let storedDev = active[id][dev.mac]
-    storedDev.rssi = dev.rssi
+    if (dev.rssi)
+        storedDev.rssi = dev.rssi
+        
     storedDev.end = new Date()
 
     if ((new Date()).getTime() - storedDev.last_update.getTime() > (config.nodeUpdateInterval * 1000)) {
@@ -123,10 +125,55 @@ function updateDevice(id, dev) {
         storedDev.last_update = new Date()
     }
 }
+/*
+async function getActive(dev) {
+    let {rows} = await db.query(`
+        SELECT "node", "start", "end", "rssi"
+        FROM "node_devices"
+        WHERE "device"=$1 AND "active"=true
+    `, [dev])
+
+    let active_nodes = []
+    if (rows && rows.length) {
+        for (let i=0; i<rows.length; i++) {
+            const row = rows[i]
+            console.log(row)
+            active_nodes[parseInt(row.node)] = {
+                start: row.start,
+                end: row.end,
+                rssi: parseInt(row.rssi)
+            }
+        }
+    }
+
+    return active_nodes
+}
+*/
+
+function getActive(node, dev) {
+    return active[node][dev.toUpperCase()]
+}
+
+async function getSession(node, dev, date) {
+    let {rows} = await db.query(`
+    SELECT "start", "end"
+    FROM "node_devices"
+    WHERE "node"=$1 AND "device"=$2 AND "start" < $3 AND "end" > $3
+    `, [node, dev, date])
+
+    if (rows.length) {
+        return {
+            start: rows[0].start,
+            end: rows[0].end
+        }
+    }
+}
 
 setInterval(check, config.nodeCheckInterval * 1000)
 
 module.exports = {
     init: init,
-    update: update
+    update: update,
+    getActive: getActive,
+    getSession: getSession
 }
