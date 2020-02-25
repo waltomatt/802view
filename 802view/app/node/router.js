@@ -25,8 +25,9 @@ router.ws("/", (ws, req) => {
                 node.packet(ws.id, msg)
             } else if (msg.i && msg.s) {
                 node.authenticate(parseInt(msg.i), msg.s, req.ip).then((id) => {
-                    if (id)
+                    if (id) {
                         ws.id = id
+                    }
                 })
             }
         }

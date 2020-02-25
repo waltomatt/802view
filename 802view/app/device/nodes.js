@@ -9,6 +9,27 @@ async function updateActive() {
     return rows
 }
 
+async function processRows(rows) {
+    for (let i=0; i<rows.length; i++) {
+        const row = rows[i]
+        const node = parseInt(row.node)
+
+        if (!active[node])
+            active[node] = {}
+
+        active[node][row.device.toUpperCase()] = {
+            start: row.start,
+            end: row.end,
+            last_update: row.end,
+            node: node,
+            rssi: parseInt(row.rssi),
+            device: row.device,
+            active: row.active,
+            db_id: parseInt(row.id)
+        }
+    }
+}
+
 async function init() {
     // load still active node_devices
 
@@ -18,24 +39,19 @@ async function init() {
     `)
 
     if (rows) {
-        for (let i=0; i<rows.length; i++) {
-            const row = rows[i]
-            const node = parseInt(row.node)
+        await processRows(rows)
+    }
+}
 
-            if (!active[node])
-                active[node] = {}
+async function initDevice(id) {
+    active[id] = {}
 
-            active[node][row.device.toUpperCase()] = {
-                start: row.start,
-                end: row.end,
-                last_update: row.end,
-                node: node,
-                rssi: parseInt(row.rssi),
-                device: row.device,
-                active: row.active,
-                db_id: parseInt(row.id)
-            }
-        }
+    let {rows} = await db.query(`
+    SELECT * FROM node_devices
+    WHERE active=true AND node=$1`, [id])
+
+    if (rows && rows.length) {
+        processRows(rows)
     }
 }
 
@@ -75,10 +91,13 @@ async function update(id, devices) {
     for (let i=0; i<devices.length; i++) {
         const dev = devices[i]
 
-        if (!active[id][dev.mac]) {
-            newDevice(id, dev)
-        } else {
-            updateDevice(id, dev)
+        // check in range
+        if (dev.rssi) {
+            if (!active[id][dev.mac]) {
+                newDevice(id, dev)
+            } else {
+                updateDevice(id, dev)
+            }
         }
     }
     
@@ -111,7 +130,7 @@ function updateDevice(id, dev) {
     let storedDev = active[id][dev.mac]
     if (dev.rssi)
         storedDev.rssi = dev.rssi
-        
+
     storedDev.end = new Date()
 
     if ((new Date()).getTime() - storedDev.last_update.getTime() > (config.nodeUpdateInterval * 1000)) {
@@ -125,33 +144,22 @@ function updateDevice(id, dev) {
         storedDev.last_update = new Date()
     }
 }
-/*
-async function getActive(dev) {
-    let {rows} = await db.query(`
-        SELECT "node", "start", "end", "rssi"
-        FROM "node_devices"
-        WHERE "device"=$1 AND "active"=true
-    `, [dev])
 
-    let active_nodes = []
-    if (rows && rows.length) {
-        for (let i=0; i<rows.length; i++) {
-            const row = rows[i]
-            console.log(row)
-            active_nodes[parseInt(row.node)] = {
-                start: row.start,
-                end: row.end,
-                rssi: parseInt(row.rssi)
-            }
+function getActive(dev, node) {
+    // all of the MACs on the server get stored in upper case
+    dev = dev.toUpperCase()
+    if (node) {
+        return active[node][dev]
+    } else {
+        let actives = []
+
+        for (let i=0; i<active.length; i++) {
+            if (active[i] && active[i][dev])
+                actives.push(active[i][dev])
         }
+
+        return actives
     }
-
-    return active_nodes
-}
-*/
-
-function getActive(node, dev) {
-    return active[node][dev.toUpperCase()]
 }
 
 async function getSession(node, dev, date) {
@@ -169,11 +177,41 @@ async function getSession(node, dev, date) {
     }
 }
 
-setInterval(check, config.nodeCheckInterval * 1000)
+async function getAllSessions(dev) {
+    let {rows} = await db.query(`
+    SELECT nd."id", nd."node", nd."start", nd."end", nd."active", n."name" AS "node_name"
+    FROM "node_devices" nd
+    INNER JOIN "nodes" n ON n."id" = nd."node"
+    WHERE "device"=$1
+    ORDER BY "start" ASC
+    `, [dev])
+
+    let sessions = []
+
+    for (let i=0; i<rows.length; i++) {
+        const row = rows[i]
+        sessions.push({
+            id: rows[i].id,
+            node: rows[i].node,
+            node_name: rows[i].node_name,
+            start: new Date(rows[i].start),
+            end: new Date(rows[i].end),
+            active: rows[i].active
+        })
+    }
+
+    return sessions
+}
+
+setInterval(() => {
+    check()
+}, config.nodeCheckInterval * 1000)
 
 module.exports = {
     init: init,
     update: update,
     getActive: getActive,
-    getSession: getSession
+    getSession: getSession,
+    getAllSessions: getAllSessions,
+    initDevice: initDevice
 }

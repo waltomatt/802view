@@ -1,6 +1,7 @@
 const crypto = require("crypto"),
     config = require("config"),
     util = require("device/util"),
+    nodes = require("device/nodes"),
     device = require("device"),
     db = require("db")
 
@@ -86,6 +87,8 @@ async function authenticateNode(id, secret, ip) {
             ip: ip,
             last_seen: new Date()
         }
+
+        nodes.initDevice(id)
 
         return rows[0].id
     } else {

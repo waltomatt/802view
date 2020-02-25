@@ -87,7 +87,9 @@ async function getInfo(mac, node, date) {
             obj.org = obj.org.split("\n")[0]
 
         if (node) {
-            obj.node = nodes.getActive(parseInt(node), mac)
+            obj.node = nodes.getActive(mac, parseInt(node))
+        } else {
+            obj.node = nodes.getActive(mac)
         }
 
         if (date) {
@@ -100,5 +102,16 @@ async function getInfo(mac, node, date) {
     }
 }
 
-exports.update = updateDevices
-exports.getInfo = getInfo
+async function setLabel(dev, label) {
+    await db.query(`
+    UPDATE "devices" 
+    SET "label"=$1
+    WHERE "mac"=$2
+    `, [label, dev])
+}
+
+module.exports = {
+    update: updateDevices,
+    getInfo: getInfo,
+    setLabel: setLabel
+}

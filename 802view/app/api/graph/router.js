@@ -144,6 +144,33 @@ async function getConnections(nodeID, date) {
     return edges
 }
 
+async function generateNodeGraph(node) {
+    const q = await db.query(`
+    SELECT "start"
+    FROM "node_devices"
+    WHERE "node"=$1
+    ORDER BY "start" ASC
+    LIMIT 1
+    `, [node])
+
+    let firstDate = new Date()
+
+    if (q.rows && q.rows.length)
+        firstDate = new Date(q.rows[0].start)
+
+    const {rows} = await db.query(`
+    SELECT d AS date, COUNT(nd.*) AS value
+    FROM "node_devices" nd
+    JOIN generate_series($2, now(), interval '1 hour') AS d
+    ON d >= nd."start" AND d <= nd."end"
+    WHERE nd.node=$1
+    GROUP BY d
+    ORDER BY d
+    `, [node, firstDate])
+
+    return rows
+}
+
 router.get("/devices/:nodeID", (req, res) => {
     const nodeID = req.params.nodeID
 
@@ -169,6 +196,14 @@ router.get("/devices/:nodeID", (req, res) => {
     } else {
         res.sendStatus(404)
     }
+})
+
+router.get("/node/:nodeID", (req, res) => {
+    const nodeID = req.params.nodeID
+
+    generateNodeGraph(nodeID).then((rows) => {
+        res.json(rows)
+    })
 })
 
 

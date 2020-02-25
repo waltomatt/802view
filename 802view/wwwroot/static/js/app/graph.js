@@ -59,12 +59,51 @@ $(document).ready(function() {
             openDevice: function(dev) {
                 Device.set(dev)
                 Device.open()
+            },
+
+            initNodeGraph: function() {
+                Graph.nodeGraphDataSet = new vis.DataSet([])
+                let groups = new vis.DataSet()
+                groups.add({
+                    id: 1,
+                    content: "Devices"
+                })
+
+
+                Graph.nodeGraph = new vis.Graph2d($("#node-graph")[0], Graph.nodeGraphDataSet, groups,{
+                    start: moment().subtract(1, "days")._d,
+                    end: new Date(),
+                    drawPoints: false,
+                    graphHeight: 200,
+                    max: new Date(),
+                    dataAxis: {
+                        left: {
+                            title: {
+                                text: "Devices"
+                            }
+                        }
+                    }
+                })
+            },
+
+            updateNodeGraph: function() {
+                Graph.nodeGraphDataSet.clear()
+                $.getJSON("/api/graph/node/" + Graph.selectedNode.id, (data) => {
+                    for (let i=0; i<data.length; i++) {
+                        Graph.nodeGraphDataSet.add({
+                            x: new Date(data[i].date),
+                            y: data[i].value,
+                            group: 1
+                        })
+                    }
+                })
             }
         }
     })
 
     initGraph()
     initNetworkView()
+    Graph.initNodeGraph()
 
     setInterval(getNodeDetails, 1000)
     setInterval(getDeviceDetails, 1000)
@@ -133,6 +172,7 @@ function initGraph() {
 
         if (Graph.view == "network") {
             Graph.selectedNode.id = nodeID
+            Graph.updateNodeGraph()
             getNodeDetails()
         }
 

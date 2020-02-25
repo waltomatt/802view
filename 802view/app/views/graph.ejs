@@ -3,6 +3,8 @@
     <head>
         <title>802view</title>
         <%- include("partials/includes") %>
+        <script type="text/javascript" src="https://unpkg.com/vis-util@latest"></script>
+        <script type="text/javascript" src="https://unpkg.com/vis-data@latest"></script>
     </head>
 
     <body>
@@ -35,7 +37,7 @@
                     </div>
 
                     <div class="col-4 p-0">
-                        <div class="card mt-2" v-if="view == 'network' && selectedNode.name">
+                        <div class="card mt-2" v-show="view == 'network' && selectedNode.name">
                             <div class="card-header">
                                 Node #{{selectedNode.id}}
                                 <button type="button" class="close">
@@ -53,6 +55,10 @@
                                 <p class="m-0" v-if="selectedNode.last_seen"><strong>Last seen:</strong> {{moment(selectedNode.last_seen).fromNow()}}</p>
                                 <p class="m-0"><strong>Number of devices:</strong> {{selectedNode.devices}} ({{selectedNode.ap_count}} APs)</p>
                                 <p class="text-muted m-0 mt-3">{{selectedNode.ip}}</p>
+
+                                <div id="node-graph" class="mt-2">
+
+                                </div>
                             </div>
                         </div>
 
@@ -98,13 +104,13 @@
 
                                     <p class="m-0">
                                         <strong>Start: </strong>
-                                        <span v-if="live">{{moment(selectedDevice.node.start).format('DD/MM/YYYY, hh:mm:ss')}}</span>
-                                        <span v-if="!live && selectedDevice.session">{{moment(selectedDevice.session.start).format('DD/MM/YYYY, hh:mm:ss')}}</span>
+                                        <span v-if="live">{{moment(selectedDevice.node.start).format('DD/MM/YYYY, HH:mm:ss')}}</span>
+                                        <span v-if="!live && selectedDevice.session">{{moment(selectedDevice.session.start).format('DD/MM/YYYY, HH:mm:ss')}}</span>
                                     </p>
 
                                     <p v-if="!live && selectedDevice.session" class="m-0">
                                         <strong>End: </strong>
-                                        <span>{{moment(selectedDevice.session.end).format('DD/MM/YYYY, hh:mm:ss')}}</span>
+                                        <span>{{moment(selectedDevice.session.end).format('DD/MM/YYYY, HH:mm:ss')}}</span>
                                     </p>
                                 </div>
 
@@ -143,8 +149,12 @@
         <%- include("partials/device") %>
     </body>
 
-    
-    <script src="/static/js/external/vis-network.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/moment@latest"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/peer/umd/vis-timeline-graph2d.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vis-timeline/styles/vis-timeline-graph2d.min.css" />
+    <script type="text/javascript" src="https://unpkg.com/vis-network@latest/peer/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vis-network/styles/vis-network.min.css" />
+
     <link rel="stylesheet" type="text/css" href="/static/css/flatpickr.min.css">
     <script src="/static/js/external/flatpickr.min.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/css/graph.css">

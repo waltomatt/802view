@@ -5,6 +5,7 @@
                 <h5 class="modal-title">
                     {{device.mac}}
                     <span v-if="device.is_ap" class="badge badge-secondary">AP</span>
+                    <span v-if="device.node.length" class="badge badge-success">Online</span>
                 </h5>
             </div>
 
@@ -28,14 +29,47 @@
                 <p class="m-0 mt-2">{{device.mac}}</p>
                 <p class="text-muted m-0">{{device.org}}</p>
                 
-                <div class="row mt-2">
+                <div class="row p-0 mt-2">
+                    <span v-if="device.ssid"><strong>SSID: </strong>{{device.ssid}}</span>
+                </div>
+
+                <div class="row">
+                    
                     <div class="col-md-6 p-0">
                         <strong>First seen: </strong>{{moment(device.first_seen).format("DD/MM/YYYY hh:mm:ss")}}
                     </div>
-                    <div class="col-md-6 p-0">
+                    <div class="col-md-6 p-0" v-if="device.node.length == 0">
                         <strong>Last seen: </strong>{{moment(device.last_seen).format("DD/MM/YYYY hh:mm:ss")}}
                     </div>
                 </div>
+
+                <div class="row mt-3">
+                    <p class="text-muted p-0 m-0">Current sessions</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Node</th>
+                                <th>Session started</th>
+                                <th>RSSI</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="node in device.node">
+                                <td>{{nodes[node.node]}}</td>
+                                <td>{{moment(node.start).format("DD/MM/YYYY hh:mm:ss")}}</td>
+                                <td>{{node.rssi}} dB</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4">
+                    <p class="text-muted p-0 m-0">Session timeline</p>
+                    <div class="device-timeline"></div>
+                </div>
+
+                
             </div>
 
             <div class="modal-footer">
@@ -45,4 +79,9 @@
     </div>
 </div>
 
+<link rel="stylesheet" type="text/css" href="/static/css/device.css">
+<script type="text/javascript" src="https://unpkg.com/moment@latest"></script>
+<script type="text/javascript" src="https://unpkg.com/vis-data@latest"></script>
+<script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/peer/umd/vis-timeline-graph2d.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/vis-timeline/styles/vis-timeline-graph2d.min.css" />
 <script type="text/javascript" src="/static/js/app/device.js"></script>
