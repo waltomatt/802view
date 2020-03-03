@@ -56,16 +56,13 @@ async function initDevice(id) {
 }
 
 async function checkNode(id) {
-    let {rows} = await updateActive();
-
+    let rows = await updateActive();
     if (rows) {
         // remove from our active array
         for (let i=0; i<rows.length; i++) {
             for (const device in active[id]) {
                 if (active[id][device].db_id == rows[i].id) {
-                    console.log("removing ", id, device)
                     delete active[id][device]
-                    console.log(active[id][device])
                 }
             }
         }
@@ -162,7 +159,7 @@ function getActive(dev, node) {
     }
 }
 
-async function getSession(node, dev, date) {
+async function getSessionOnDate(node, dev, date) {
     let {rows} = await db.query(`
     SELECT "start", "end"
     FROM "node_devices"
@@ -174,6 +171,29 @@ async function getSession(node, dev, date) {
             start: rows[0].start,
             end: rows[0].end
         }
+    } else {
+        return false
+    }
+}
+
+async function getSession(sessionID) {
+    let {rows} = await db.query(`
+    SELECT "start", "end", "node", "active", "device"
+    FROM "node_devices"
+    WHERE "id"=$1
+    `, [sessionID])
+
+    if (rows.length) {
+        return {
+            id: sessionID,
+            device: rows[0].device,
+            start: rows[0].start,
+            end: rows[0].end,
+            node: rows[0].node,
+            active: rows[0].active
+        }
+    } else {
+        return false
     }
 }
 
@@ -211,6 +231,7 @@ module.exports = {
     init: init,
     update: update,
     getActive: getActive,
+    getSessionOnDate: getSessionOnDate,
     getSession: getSession,
     getAllSessions: getAllSessions,
     initDevice: initDevice

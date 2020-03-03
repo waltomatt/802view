@@ -28,6 +28,9 @@ $(document).ready(function() {
             },
 
             updateConnections: function() {
+
+                if (Graph.view != "node") return;
+
                 let dev = Graph.selectedDevice.id
                 let connections = []
                 let edges = Graph.network.getConnectedEdges(dev)
@@ -207,6 +210,7 @@ function initNetworkView() {
     }
 
     $.getJSON("/api/graph/nodes", (json) => {
+        if (Graph.view != "network") return
     
         let nodes = []
 
@@ -228,10 +232,12 @@ function initNodeView() {
     if (Graph.date) {
         path += ("?date=" + parseInt(Graph.date.getTime() / 1000))
     }
+    Graph.view = "node"
 
     $.getJSON(path, (json) => {
+        if (Graph.view != "node") return
+        
         Graph.lastUpdate = new Date()
-        Graph.view = "node"
         Graph.graphEndpoint = "devices/" + Graph.selectedNode.id
 
         Graph.nodeDataSet.clear()

@@ -1,0 +1,18 @@
+<div id="notify" style="position: fixed; bottom:60px; right: 0; height:100%; width:200px;">
+    <div class="toast" role="alert" v-for="n in notifications">
+        <div class="toast-header">
+            <img v-bind:src="n.img" class="rounded mr-2" v-bind:alt="n.type">
+            <strong class="mr-auto">{{n.title}}</strong>
+            <small class="text-muted">{{moment(n.date).fromNow()}}</small>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+
+        <div class="toast-body">
+            {{n.body}}
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/app/notify.js"></script>

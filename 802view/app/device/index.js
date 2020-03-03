@@ -93,8 +93,10 @@ async function getInfo(mac, node, date) {
         }
 
         if (date) {
-            obj.session = await nodes.getSession(parseInt(node), mac, date)
+            obj.session = await nodes.getSessionOnDate(parseInt(node), mac, date)
         }
+
+        obj.connections = await connections.get(mac)
 
         return obj
     } else {
@@ -108,6 +110,10 @@ async function setLabel(dev, label) {
     SET "label"=$1
     WHERE "mac"=$2
     `, [label, dev])
+}
+
+async function getSession(sessionID) {
+
 }
 
 module.exports = {

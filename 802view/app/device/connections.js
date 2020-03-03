@@ -142,7 +142,30 @@ async function checkExpired() {
 
 setInterval(checkExpired, config.connectionCheckInterval * 1000)
 
+
+async function get(device, start, end) {
+
+    if (start) {
+        let {rows} = await db.query(`
+        SELECT * 
+        FROM "connections"
+        WHERE ("src"=$1 OR "dst"=$1) AND "end_time" > $2 AND "start_time" < $3
+        `, [device, new Date(start), new Date(end)])
+
+        return rows
+    } else {
+        let {rows} = await db.query(`
+        SELECT * 
+        FROM "connections"
+        WHERE ("src"=$1 OR "dst"=$1) AND "active"=true
+        `, [device])
+
+        return rows
+    }
+}
+
 module.exports = {
     update: update,
+    get: get,
     init: init
 }

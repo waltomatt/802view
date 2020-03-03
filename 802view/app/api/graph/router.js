@@ -161,7 +161,7 @@ async function generateNodeGraph(node) {
     const {rows} = await db.query(`
     SELECT d AS date, COUNT(nd.*) AS value
     FROM "node_devices" nd
-    JOIN generate_series($2, now(), interval '1 hour') AS d
+    JOIN generate_series($2, now(), interval '10 minute') AS d
     ON d >= nd."start" AND d <= nd."end"
     WHERE nd.node=$1
     GROUP BY d

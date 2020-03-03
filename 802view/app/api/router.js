@@ -1,7 +1,8 @@
 const express = require("express"),
     db = require("db"),
     node = require("node"),
-    nodes = require("device/nodes")
+    nodes = require("device/nodes"),
+    connections = require("device/connections"),
     device = require("device")
 
 const router = express.Router()
@@ -76,6 +77,27 @@ router.post("/device/label", (req, res, next) => {
         }).catch((e) => {
             next(e)
         })
+    }
+})
+
+router.get("/session/:session", (req, res, next) => {
+    let sessionID = parseInt(req.params.session)
+
+    if (sessionID) {
+        nodes.getSession(sessionID).then((session) => {
+            if (session) {
+                connections.get(session.device, session.start, session.end).then((connections) => {
+                    session.connections = connections
+                    res.json(session)
+                })
+            } else {
+                res.sendStatus(404)
+            }
+        }).catch((e) => {
+            next(e)
+        })
+    } else {
+        res.sendStatus(404)  
     }
 })
 

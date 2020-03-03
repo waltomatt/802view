@@ -6,11 +6,12 @@
                     {{device.mac}}
                     <span v-if="device.is_ap" class="badge badge-secondary">AP</span>
                     <span v-if="device.node.length" class="badge badge-success">Online</span>
+                    <span v-if="!device.node.length" class="badge badge-secondary">Offline</span>
                 </h5>
             </div>
 
             <div class="modal-body">
-                <button v-if="history.length" type="button" class="btn btn-secondary">Back</button>
+                <button v-if="history.length" type="button" class="btn btn-secondary" v-on:click="back">Back</button>
 
                 <div class="row">
                     <div class="col-5 p-0">
@@ -37,6 +38,7 @@
                     
                     <div class="col-md-6 p-0">
                         <strong>First seen: </strong>{{moment(device.first_seen).format("DD/MM/YYYY hh:mm:ss")}}
+                        
                     </div>
                     <div class="col-md-6 p-0" v-if="device.node.length == 0">
                         <strong>Last seen: </strong>{{moment(device.last_seen).format("DD/MM/YYYY hh:mm:ss")}}
@@ -45,6 +47,7 @@
 
                 <div class="row mt-3">
                     <p class="text-muted p-0 m-0">Current sessions</p>
+                    <p v-if="!device.node.length">No current sessions</p>
                     <table class="table">
                         <thead>
                             <tr>
@@ -64,9 +67,60 @@
                     </table>
                 </div>
 
+                <div class="row mt-3">
+                    <p class="text-muted p-0 m-0">Current connections</p>
+                    <p v-if="!device.connections.length">No current sessions</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Device</th>
+                                <th>Packets Tx/Rx</th>
+                                <th>Bytes Tx/Rx</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="con in device.connections">
+                                <td><a href="#" v-on:click="set(con.device, true)">{{con.device}}</a></td>
+                                <td>{{con.tx_packets}} / {{con.rx_packets}}</td>
+                                <td>{{con.tx_bytes}} / {{con.rx_bytes}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="row mt-4">
                     <p class="text-muted p-0 m-0">Session timeline</p>
                     <div class="device-timeline"></div>
+                </div>
+
+                <div class="session card p-2 mt-3" v-if="selectedSession.start">
+                    <div class="row">
+                        <p class="text-muted p-0 m-0">Session #{{selectedSession.id}}</p>
+                    </div>
+                    <div class="row">
+                        <strong>Node: </strong> {{nodes[selectedSession.node]}}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 p-0">
+                            <strong>Started: </strong> {{moment(selectedSession.start).format("DD/MM/YYYY hh:mm:ss")}}
+                            <span v-if="selectedSession.active" class="badge badge-success ml-2">Active</span>
+                        </div>
+
+                        <div class="col-md-6 p-0" v-if="!selectedSession.active">
+                            <strong>Ended: </strong> {{moment(selectedSession.end).format("DD/MM/YYYY hh:mm:ss")}} ({{momentutc(moment(selectedSession.end).diff(selectedSession.start)).format("HH[h] mm[m] ss[s]")}})
+                        </div>
+                    </div>
+
+                    <div class="row mt-2" v-if="selectedSession.connections.length">
+                        <div>
+                            <p class="mb-0"><strong>Communicated with: </strong></p>
+                
+                            <ul>
+                                <li v-for="dev in selectedSession.connections"><a href="#" v-on:click="set(dev, true)">{{dev}}</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 
