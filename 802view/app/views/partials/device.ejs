@@ -10,10 +10,10 @@
                 </h5>
             </div>
 
-            <div class="modal-body">
-                <button v-if="history.length" type="button" class="btn btn-secondary" v-on:click="back">Back</button>
+            <div class="modal-body container-fluid">
+                <button v-if="history.length" type="button" class="btn btn-secondary mb-2" v-on:click="back">Back</button>
 
-                <div class="row">
+                <div class="row m-0">
                     <div class="col-5 p-0">
                         <h5 v-if="!editLabel"> 
                             <span >{{device.label}}</span>
@@ -30,11 +30,11 @@
                 <p class="m-0 mt-2">{{device.mac}}</p>
                 <p class="text-muted m-0">{{device.org}}</p>
                 
-                <div class="row p-0 mt-2">
+                <div class="row m-0 p-0 mt-2">
                     <span v-if="device.ssid"><strong>SSID: </strong>{{device.ssid}}</span>
                 </div>
 
-                <div class="row">
+                <div class="row m-0">
                     
                     <div class="col-md-6 p-0">
                         <strong>First seen: </strong>{{moment(device.first_seen).format("DD/MM/YYYY hh:mm:ss")}}
@@ -45,9 +45,8 @@
                     </div>
                 </div>
 
-                <div class="row mt-3">
+                <div class="row m-0 mt-3" v-if="device.node.length">
                     <p class="text-muted p-0 m-0">Current sessions</p>
-                    <p v-if="!device.node.length">No current sessions</p>
                     <table class="table">
                         <thead>
                             <tr>
@@ -67,9 +66,8 @@
                     </table>
                 </div>
 
-                <div class="row mt-3">
+                <div class="row m-0 mt-3" v-if="device.connections.length">
                     <p class="text-muted p-0 m-0">Current connections</p>
-                    <p v-if="!device.connections.length">No current sessions</p>
                     <table class="table">
                         <thead>
                             <tr>
@@ -89,19 +87,19 @@
                     </table>
                 </div>
 
-                <div class="row mt-4">
+                <div class="row m-0 mt-4">
                     <p class="text-muted p-0 m-0">Session timeline</p>
                     <div class="device-timeline"></div>
                 </div>
 
                 <div class="session card p-2 mt-3" v-if="selectedSession.start">
-                    <div class="row">
+                    <div class="row m-0">
                         <p class="text-muted p-0 m-0">Session #{{selectedSession.id}}</p>
                     </div>
-                    <div class="row">
+                    <div class="row m-0">
                         <strong>Node: </strong> {{nodes[selectedSession.node]}}
                     </div>
-                    <div class="row">
+                    <div class="row m-0">
                         <div class="col-md-6 p-0">
                             <strong>Started: </strong> {{moment(selectedSession.start).format("DD/MM/YYYY hh:mm:ss")}}
                             <span v-if="selectedSession.active" class="badge badge-success ml-2">Active</span>
@@ -112,7 +110,7 @@
                         </div>
                     </div>
 
-                    <div class="row mt-2" v-if="selectedSession.connections.length">
+                    <div class="row m-0 mt-2" v-if="selectedSession.connections.length">
                         <div>
                             <p class="mb-0"><strong>Communicated with: </strong></p>
                 

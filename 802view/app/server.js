@@ -16,8 +16,9 @@ app.use(bodyParser.urlencoded({
 
 app.use("/static", express.static(__dirname + "/../wwwroot/static"))
 app.use("/node", require("node/router"))
-app.use("/dashboard", require("dashboard/router"))
+app.use("/graph", require("graph/router"))
 app.use("/api", require("api/router"))
+app.use("/search", require("search/router"))
 
 connections.init()
 nodes.init()

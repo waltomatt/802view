@@ -109,7 +109,6 @@ $(document).ready(function() {
                                 connection.rx_bytes = con.up_data
                             }
 
-                            console.log(connection)
                             connections.push(connection)
                         }
 

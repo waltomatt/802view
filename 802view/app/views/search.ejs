@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>802view</title>
+        <%- include("partials/includes") %>
+        <script src="/static/js/app/search.js"></script>
+        <link rel="stylesheet" href="/static/css/bootstrap-select.min.css">
+        <script type="text/javascript" src="/static/js/external/bootstrap-select.min.js"></script>
+    </head>
+
+    <body>
+        <%- include("partials/nav") %>
+        <div id="search">
+            <div class="container">
+                <div class="card p-3 mt-3">
+                    <form action="/search" method="GET" v-on:submit="search">
+                        <div class="form-group row">
+                            <div class="col-md-5">
+                                <label>Searching</label>
+                                <select class="form-control" v-model="query.type" data-live-search="true">
+                                    <option value="devices">Devices</option>
+                                    <option value="sessions">Sessions</option>
+                                    <option value="connections">Connections</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="search-devices">
+                            <div class="form-group row mb-0">
+                                <div class="col-md-4">
+                                    <label v-if="query.type != 'connections'">Device</label>
+                                    <label v-if="query.type == 'connections'">Device 1</label>
+                                    <select class="form-control" v-model="query.search">
+                                        <option value="mac">MAC Address</option>
+                                        <option value="org">Manufacturer</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-8" v-if="query.search=='mac'">
+                                    <label>&nbsp;</label>
+                                    <input type="text" name="mac" placeholder="00:00:00:00:00:00" class="form-control" v-model="query.mac">
+                                    <p class="text-muted">Leave blank for all devices</p>
+                                </div>
+
+                                <div class="col-md-8 mb-3" v-show="query.search=='org'">
+                                    <label>&nbsp;</label>
+                                    <select class="form-control manufacture-picker" name="oui" data-live-search="true" v-model="query.org">
+                                    <% for (let i=0; i<manufacturers.length; i++) { %>
+                                        <option value="<%=i%>"><%=manufacturers[i].org%></option>
+                                    <% } %>          
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row" v-show="query.type == 'connections'">
+                                <div class="col-md-4">
+                                    <label>Device 2</label>
+                                    <select class="form-control" v-model="query.search2">
+                                        <option value="mac">MAC Address</option>
+                                        <option value="org">Manufacturer</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-8" v-if="query.search2=='mac'">
+                                    <label>&nbsp;</label>
+                                    <input type="text" name="mac" placeholder="00:00:00:00:00:00" class="form-control">
+                                    <p class="text-muted">Leave blank for all devices</p>
+                                </div>
+
+                                <div class="col-md-8 mb-3" v-show="query.search2=='org'">
+                                    <label>&nbsp;</label>
+                                    <select class="form-control manufacture-picker" name="oui" data-live-search="true">
+                                    <% for (let i=0; i<manufacturers.length; i++) { %>
+                                        <option value="<%=i%>"><%=manufacturers[i].org%></option>
+                                    <% } %>          
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-4" v-show="query.type!='devices'">
+                                <label>Filter by</label>
+                                <input type="text" class="form-control" placeholder="Date range" id="filter-date">
+                            </div>
+                            <div class="col-md-4" v-if="query.type=='devices'">
+                                <label v-if="query.type!='devices'">&nbsp;</label>
+                                <label v-if="query.type=='devices'">Filter by</label>
+                            
+                                <div class="form-check">
+                                    <input id="filter-ap" type="checkbox" class="form-check-input" v-model="query.filter.ap">
+                                    <label for="filter-ap" class="form-check-label">Access points only</label>
+                                </div>
+                            </div>
+                            <div class="col-md-4" v-show="query.type=='sessions'">
+                                <label>&nbsp;</label>
+                                <select class="form-control node-picker" v-model="query.filter.node" multiple data-actions-box="true">
+                                <% for (let i=0; i<nodes.length; i++) { %>
+                                    <option value="<%=nodes[i].id%>"><%=nodes[i].name%></option>
+                                <% } %>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-4">
+                                <label>Sort by</label>
+                                <select name="filter" class="form-control" v-model="query.sort">
+                                    <option value="last_seen" v-if="query.type=='devices'">Last seen</option>
+                                    <option value="first_seen" v-if="query.type=='devices'">First seen</option>
+                                    <option value="session_start" v-if="query.type=='sessions'">Session start</option>
+                                    <option value="session_end" v-if="query.type=='sessions'">Session end</option>
+                                    <option value="session_length" v-if="query.type=='sessions'">Session length</option>
+                                    <option value="connection_start" v-if="query.type=='connections'">Connection start</option>
+                                    <option value="connection_end" v-if="query.type=='connections'">Connection end</option>
+                                    <option value="connection_length" v-if="query.type=='connections'">Connection length</option>
+                                    <option value="connection_data" v-if="query.type=='connections'">Connection bytes</option>
+                                    <option value="connection_packets" v-if="query.type=='connections'">Connection packets</option>
+                                </select>
+                            </div>
+                        </div>
+                    
+                        <div class="form-group row">
+                            <div class="col-md-12">
+                                <button type="submit" class="btn btn-primary">Search</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="results mt-3" v-if="searchType">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <p class="text-muted">Showing {{(page*25)}} - {{(page*25)+results.length}} of {{totalCount}} results</p>
+                        </div>
+                        <div class="col-md-9">
+                            <nav v-if="maxPage > 1">
+                                <ul class="pagination justify-content-end">
+                                    <li v-bind:class="{'page-item': true, disabled: (page==0)}">
+                                        <a class="page-link" href="#" v-on:click="setPage(page-1)">&lt;</a>
+                                    </li>
+
+                                    <li v-if="maxPage < 15" v-for="p in maxPage" v-bind:class="{'page-item': true, 'active': (p-1 == page)}"><a class="page-link" href="#" v-on:click="setPage(p-1)">{{p}}</a></li>
+                                
+                                    <li class="page-item" v-bind:class="{'page-item': true, disabled: (page==maxPage-1)}">
+                                        <a class="page-link" href="#" v-on:click="setPage(page+1)">&gt;</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    <table class="table" v-if="searchType=='devices'">
+                        <thead>
+                            <tr>
+                                <th>MAC</th>
+                                <th>Label</th>
+                                <th>SSID</th>
+                                <th>First seen</th>
+                                <th>Last seen</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="d in results">
+                                <td>
+                                    <a href="#" v-on:click="openDevice(d.mac)" class="dev" v-bind:data-device="d.mac">{{d.mac}}</a>
+                                    <span class="badge badge-secondary" v-if="d.is_ap">AP</span>
+                                    <span class="badge badge-success" v-if="d.online">Online</span>
+                                </td>
+                                <td v-if="d.label">{{d.label}}</td>
+                                <td v-if="!d.label" class="text-muted">None set</td>
+                                <td>{{d.ssid}}</td>
+                                <td>{{moment(d.first_seen).format("DD/MM/YYYY hh:mm:ss")}}</td>
+                                <td>{{moment(d.last_seen).format("DD/MM/YYYY hh:mm:ss")}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table" v-if="searchType=='sessions'">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Device</th>
+                                <th>Node</th>
+                                <th>Started</th>
+                                <th>Ended</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="s in results">
+                                <td>{{s.id}}</td>
+                                <td><a href="#" v-on:click="openDevice(s.device)">{{s.label || s.ssid || s.device}}</a></td>
+                                <td>{{s.node_name}}</td>
+                                <td>{{moment(s.start).format("DD/MM/YYYY hh:mm:ss")}}</td>
+                                <td v-if="s.active"><span class="badge badge-success">Active</span></td>
+                                <td v-if="!s.active">{{moment(s.end).format("DD/MM/YYYY hh:mm:ss")}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <table class="table" v-if="searchType=='connections'">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Device 1</th>
+                                <th>Device 2</th>
+                                <th>Packets Up/Down</th>
+                                <th>Bytes Up/Down</th>
+                                <th>Started</th>
+                                <th>Ended</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="c in results">
+                                <td>{{c.id}}</td>
+                                <td>
+                                    <a href="#" v-on:click="openDevice(c.src)">{{c.src_label || c.src_ssid || c.src}}</a>
+                                </td>
+                                <td>
+                                    <a href="#" v-on:click="openDevice(c.dst)">{{c.dst_label || c.dst_label || c.dst}}</a>
+                                </td>
+                                <td>{{c.up_packets}} / {{c.down_packets}}</td>
+                                <td>{{c.up_data}} / {{c.down_data}}</td>
+                                <td>{{moment(c.start_time).format("DD/MM/YYYY hh:mm:ss")}}</td>
+                                <td v-if="c.active"><span class="badge badge-success">Active</span></td>
+                                <td v-if="!c.active">{{moment(c.end_time).format("DD/MM/YYYY hh:mm:ss")}}</td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <nav v-if="maxPage > 1">
+                        <ul class="pagination justify-content-end">
+                            <li v-bind:class="{'page-item': true, disabled: (page==0)}">
+                                <a class="page-link" href="#" v-on:click="setPage(page-1)">&lt;</a>
+                            </li>
+
+                            <li v-if="maxPage < 15" v-for="p in maxPage" v-bind:class="{'page-item': true, 'active': (p-1 == page)}"><a class="page-link" href="#" v-on:click="setPage(p-1)">{{p}}</a></li>
+                        
+                            <li class="page-item" v-bind:class="{'page-item': true, disabled: (page==maxPage-1)}">
+                                <a class="page-link" href="#" v-on:click="setPage(page+1)">&gt;</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <%- include("partials/device") %>
+        <link rel="stylesheet" type="text/css" href="/static/css/flatpickr.min.css">
+        <script src="/static/js/external/flatpickr.min.js"></script>
+    </body>
+</html>
