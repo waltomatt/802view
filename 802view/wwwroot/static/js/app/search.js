@@ -18,6 +18,7 @@ $(document).ready(function() {
                     min_date: false,
                     max_date: false,
                     ap: false,
+                    active: false,
                     node: []
                 },
 
@@ -70,6 +71,7 @@ $(document).ready(function() {
                 let query = {
                     search: Search.query.search,
                     only_ap: Search.query.filter.ap,
+                    active: Search.query.filter.active,
                     sort: Search.query.sort
                 }
 
@@ -78,7 +80,6 @@ $(document).ready(function() {
 
                 if (Search.query.filter.max_date)
                     query.max_date = Search.query.filter.max_date.getTime() / 1000
-
 
                 if (Search.query.search == "mac")
                     query.mac = Search.query.mac
@@ -92,7 +93,8 @@ $(document).ready(function() {
                 let query = {
                     search: Search.query.search,
                     nodes: Search.query.filter.node.join(","),
-                    sort: Search.query.sort
+                    sort: Search.query.sort,
+                    active: Search.query.filter.active
                 }
 
                 if (Search.query.filter.min_date)
@@ -113,8 +115,10 @@ $(document).ready(function() {
             connections: function() {
                 let query = {
                     search: Search.query.search,
+                    search2: Search.query.search2,
                     node: Search.query.filter.node,
-                    sort: Search.query.sort
+                    sort: Search.query.sort,
+                    active: Search.query.filter.active
                 }
 
                 if (Search.query.filter.min_date)

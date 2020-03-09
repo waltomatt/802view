@@ -57,44 +57,58 @@ async function getNodeList() {
     return rows
 }
 
-async function device(searchType, mac, org, only_ap, sort, page) {
+function orgQueryPart(org, column) {
+    if (activeOrgs[org]) {
+        let q = `(trunc("${column}") IN (`
+        let macs = []
+        for (let i=0; i<activeOrgs[org].ouis.length; i++) {
+            let oui = activeOrgs[org].ouis[i]
+            oui = "macaddr '" + oui + "000000'"
+            macs.push(oui)
+        }
+
+        q += macs.join(",")
+        q += ")) "
+
+        return q
+    } else {
+        return "0=1 "
+    }
+}
+
+function macQueryPart(mac, column, queryParams) {
+    let query = ""
+
+    if (mac) {
+        mac = mac.replace(new RegExp(":", "g"), "")
+        query += `(REPLACE(CAST("${column}" as varchar), ':', '') LIKE $${queryParams.length+1}) `
+        queryParams.push("%"+mac+"%")
+    } else {
+        query += "1=1 "
+    }
+
+    return query
+}
+
+function getQueryPart(searchType, mac, org, column, queryParams) {
+    if (searchType == "org") {
+        return orgQueryPart(org, column)
+    } else if (searchType == "mac") {
+        return macQueryPart(mac, column, queryParams)
+    }
+}
+
+async function device(searchType, mac, org, only_ap, active, sort, page) {
     
     let query = `
         SELECT COUNT(*) OVER (), *,
             (SELECT "ssid" FROM "device_ssids" ds WHERE ds."device"=d."mac") AS ssid,
             (SELECT COUNT(*) OVER () FROM "node_devices" nd WHERE nd."device"=d."mac" AND "active"=true GROUP BY nd."device") AS online
-        FROM devices d `
+        FROM devices d WHERE `
 
     let queryParams = []
 
-    if (searchType == "org") {
-        if (activeOrgs[org]) {
-            query += `WHERE trunc("mac") IN (`
-
-            let macs = []
-            for (let i=0; i<activeOrgs[org].ouis.length; i++) {
-                let oui = activeOrgs[org].ouis[i]
-                oui = "macaddr '" + oui + "000000'"
-                macs.push(oui)
-            }
-
-            query += macs.join(",")
-            query += ")"
-
-        } else {
-            return []
-        }
-    } else {
-        if (mac) {
-            mac = mac.replace(new RegExp(":", "g"), "")
-            query += `WHERE REPLACE(CAST("mac" as varchar), ':', '') LIKE $1`
-            queryParams.push("%"+mac+"%")
-        } else {
-            if (only_ap) {
-                query += "WHERE 1=1"
-            }
-        }
-    }
+    query += getQueryPart(searchType, mac, org, "mac", queryParams)
 
     if (only_ap) {
         query += " AND is_ap=true"
@@ -112,45 +126,31 @@ async function device(searchType, mac, org, only_ap, sort, page) {
     queryParams.push(page * 25)
 
     let {rows} = await db.query(query, queryParams)
-    return rows
+
+    if (!active) {
+        return rows
+    } else {
+        let online = []
+
+        for (let i=0; i<rows.length; i++)
+            if (rows[i].online > 0)
+                online.push(rows[i])
+
+        return online
+    }
 }
 
-async function sessions(searchType, mac, org, min_date, max_date, nodes, sort, page) {
+async function sessions(searchType, mac, org, min_date, max_date, nodes, active, sort, page) {
     let query = `
         SELECT COUNT(*) OVER (), *, 
             (SELECT "label" FROM "devices" WHERE devices."mac" = nd."device"),
             (SELECT "ssid" FROM "device_ssids" ds WHERE ds."device"=nd."device") AS ssid,
             (SELECT "name" FROM "nodes" n WHERE n."id"=nd."node") AS node_name
-        FROM "node_devices" nd `
+        FROM "node_devices" nd WHERE `
 
     let queryParams = []
 
-    if (searchType == "org") {
-        if (activeOrgs[org]) {
-            query += `WHERE trunc("device") IN (`
-
-            let macs = []
-            for (let i=0; i<activeOrgs[org].ouis.length; i++) {
-                let oui = activeOrgs[org].ouis[i]
-                oui = "macaddr '" + oui + "000000'"
-                macs.push(oui)
-            }
-
-            query += macs.join(",")
-            query += ")"
-
-        } else {
-            return []
-        }
-    } else {
-        if (mac) {
-            mac = mac.replace(new RegExp(":", "g"), "")
-            query += `WHERE REPLACE(CAST("device" as varchar), ':', '') LIKE $1`
-            queryParams.push("%"+mac+"%")
-        } else {
-            query += "WHERE 1=1"
-        }
-    }
+    query += getQueryPart(saerchType, mac, org, "device", queryParams)
 
     if (min_date && max_date) {
         query +=  ` AND ("start_time" < $${queryParams.length+1} AND "end_time" > $${queryParams.length+2})`
@@ -172,6 +172,10 @@ async function sessions(searchType, mac, org, min_date, max_date, nodes, sort, p
         query += ")"
     }
 
+    if (active) {
+        query += ` AND "active"=true`
+    }
+
     query += " GROUP BY id"
 
 
@@ -191,75 +195,23 @@ async function sessions(searchType, mac, org, min_date, max_date, nodes, sort, p
     return rows
 }
 
-async function connections(searchType, mac, org, searchType2, mac2, org2, min_date, max_date, sort, page) {
+
+async function connections(searchType, mac, org, searchType2, mac2, org2, min_date, max_date, active, sort, page) {
     let query = `
         SELECT COUNT(*) OVER (), *, 
             (SELECT "label" FROM "devices" WHERE devices."mac" = c."src") AS src_label, 
             (SELECT "ssid" FROM "device_ssids" ds WHERE ds."device"=c."src") AS src_ssid,
             (SELECT "label" FROM "devices" WHERE devices."mac" = c."dst") AS dst_label,
             (SELECT "ssid" FROM "device_ssids" ds WHERE ds."device"=c."dst") AS dst_ssid
-        FROM "connections" c `
+        FROM "connections" c WHERE `
 
     let queryParams = []
 
+    // IF SRC=A AND DST=B
+    // OR DST=A AND SRC=B
 
-    if (searchType == "org") {
-        if (activeOrgs[org]) {
-            query += `WHERE (trunc("src") IN (`
-
-            let macs = []
-            for (let i=0; i<activeOrgs[org].ouis.length; i++) {
-                let oui = activeOrgs[org].ouis[i]
-                oui = "macaddr '" + oui + "000000'"
-                macs.push(oui)
-            }
-
-            query += macs.join(",")
-            query += ")"
-
-            query += ` OR trunc("dst") IN (`
-            query += macs.join(",")
-            query += "))"
-        } else {
-            return []
-        }
-    } else {
-        if (mac) {
-            mac = mac.replace(new RegExp(":", "g"), "")
-            query += `WHERE (REPLACE(CAST("src" as varchar), ':', '') LIKE $1 OR REPLACE(CAST("dst" as varchar), ':', '') LIKE $1)`
-            queryParams.push("%"+mac+"%")
-        } else {
-            query += "WHERE 1=1"
-        }
-    }
-
-    if (searchType2 == "org") {
-        if (activeOrgs[org2]) {
-            query += `AND ((trunc("src") IN (`
-
-            let macs = []
-            for (let i=0; i<activeOrgs[org2].ouis.length; i++) {
-                let oui = activeOrgs[org2].ouis[i]
-                oui = "macaddr '" + oui + "000000'"
-                macs.push(oui)
-            }
-
-            query += macs.join(",")
-            query += ")"
-
-            query += ` OR trunc("dst") IN (`
-            query += macs.join(",")
-            query += "))"
-        } else {
-            return []
-        }
-    } else {
-        if (mac2) {
-            mac2 = mac.replace(new RegExp(":", "g"), "")
-            query += `AND (REPLACE(CAST("src" as varchar), ':', '') LIKE $1 OR REPLACE(CAST("dst" as varchar), ':', '') LIKE $1)`
-            queryParams.push("%"+mac+"%")
-        }
-    }
+    query += `(${getQueryPart(searchType, mac, org, "src", queryParams)} AND ${getQueryPart(searchType2, mac2, org2, "dst", queryParams)}) OR `
+    query += `(${getQueryPart(searchType, mac, org, "dst", queryParams)} AND ${getQueryPart(searchType2, mac2, org2, "src", queryParams)})`
 
     if (min_date && max_date) {
         query +=  ` AND ("start_time" < $${queryParams.length+1} AND "end_time" > $${queryParams.length+2})`
@@ -267,6 +219,9 @@ async function connections(searchType, mac, org, searchType2, mac2, org2, min_da
         queryParams.push(min_date) 
     }
 
+    if (active) {
+        query += ` AND "active"=true`
+    }
 
     query += ` GROUP BY c."id"`
 

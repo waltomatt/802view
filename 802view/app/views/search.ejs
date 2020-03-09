@@ -63,13 +63,13 @@
 
                                 <div class="col-md-8" v-if="query.search2=='mac'">
                                     <label>&nbsp;</label>
-                                    <input type="text" name="mac" placeholder="00:00:00:00:00:00" class="form-control">
+                                    <input type="text" name="mac" placeholder="00:00:00:00:00:00" class="form-control" v-model="query.mac2">
                                     <p class="text-muted">Leave blank for all devices</p>
                                 </div>
 
                                 <div class="col-md-8 mb-3" v-show="query.search2=='org'">
                                     <label>&nbsp;</label>
-                                    <select class="form-control manufacture-picker" name="oui" data-live-search="true">
+                                    <select class="form-control manufacture-picker" name="oui" data-live-search="true" v-model="query.org2">
                                     <% for (let i=0; i<manufacturers.length; i++) { %>
                                         <option value="<%=i%>"><%=manufacturers[i].org%></option>
                                     <% } %>          
@@ -99,6 +99,15 @@
                                     <option value="<%=nodes[i].id%>"><%=nodes[i].name%></option>
                                 <% } %>
                                 </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>&nbsp;</label>
+                                <div class="form-check">
+                                    <input id="filter-online" type="checkbox" class="form-check-input" v-model="query.filter.active">
+                                    <label v-if="query.type=='devices'" for="filter-online" class="form-check-label">Online devices only</label>
+                                    <label v-if="query.type=='sessions'" for="filter-online" class="form-check-label">Active sessions only</label>
+                                    <label v-if="query.type=='connections'" for="filter-online" class="form-check-label">Active connections only</label>
+                                </div>
                             </div>
                         </div>
 
