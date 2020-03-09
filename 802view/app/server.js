@@ -19,6 +19,7 @@ app.use("/node", require("node/router"))
 app.use("/graph", require("graph/router"))
 app.use("/api", require("api/router"))
 app.use("/search", require("search/router"))
+app.use("/alerts", require("alerts/router"))
 
 connections.init()
 nodes.init()

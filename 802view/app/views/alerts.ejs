@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>802view</title>
+        <%- include("partials/includes") %>
+        <script src="/static/js/app/alerts.js"></script>
+        <link rel="stylesheet" href="/static/css/bootstrap-select.min.css">
+        <script type="text/javascript" src="/static/js/external/bootstrap-select.min.js"></script>
+    </head>
+
+    <body>
+        <%- include("partials/nav") %>
+        <div id="alerts">
+            <div class="container">
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button class="btn btn-primary" data-toggle="modal" data-target="#create">Create new alert</button>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Name</th>
+                                    <th>Last triggered</th>
+                                    <th>Count (current)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="a in list">
+                                    <td>{{a.id}}</td>
+                                    <td>{{a.name}}</td>
+                                    <td>Never</td>
+                                    <td>0 (0)</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary">View alerts</button>
+                                        <button class="btn btn-sm btn-warning">Pause</button>
+                                        <button class="btn btn-sm btn-danger">Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="modal fade" id="create">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                Create new alert
+                            </h5>
+                        </div>
+            
+                        <div class="modal-body container">
+                            <form>
+                                <div class="form-group">
+                                    <label for="alert-name">Name</label>
+                                    <input class="form-control" type="text" id="alert-name" placeholder="An alert name..." v-model="create.name">
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-md-4">
+                                        <label for="alert-on">Triggered on</label>
+                                        <select class="form-control" id="alert-on" v-model="create.on">
+                                            <option value="session-start">Session start</option>
+                                            <option value="session-end">Session end</option>
+                                            <option value="connection-start">Connection start</option>
+                                            <option value="connection-end">Connection end</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group col-md-4">
+                                        <label for="alert-type">when</label>
+                                        <select class="form-control" id="alert-type" v-model="create.type">
+                                            <option value="mac">MAC Address</option>
+                                            <option value="org">Manufacturer</option>
+                                            <option value="label">Label</option>
+                                        </select> 
+                                    </div>
+
+                                    <div class="form-group col-md-4">
+                                        <label for="alert-match">&nbsp;</label>
+                                        <select class="form-control" id="alert-match" v-model="create.matches">
+                                            <option value="true">Matches</option>
+                                            <option value="false">Doesn't match</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row" v-show="create.type=='org'">
+                                    <div class="form-group col-md-12">
+                                        <select class="form-control manufacture-picker col-md-12" name="oui" data-live-search="true" v-model="create.org">
+                                        <% for (let i=0; i<manufacturers.length; i++) { %>
+                                            <option value="<%=i%>"><%=manufacturers[i].org%></option>
+                                        <% } %>          
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row" v-show="create.type=='mac'">
+                                    <div class="form-group col-md-12">
+                                        <input class="form-control" v-model="create.mac" placeholder="00:00:00:00:00">
+                                    </div>
+                                </div>
+
+                                <div class="row" v-show="create.type=='label'">
+                                    <div class="form-group col-md-12">
+                                        <input class="form-control" v-model="create.label" placeholder="A label (or part of one)">
+                                    </div>
+                                </div>
+
+                                <div class="row mt-2 mb-2#">
+                                    <div class="col-md-12">
+                                        <button type="submit" class="btn btn-primary" v-on:click="createAlert">Create</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>
