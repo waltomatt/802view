@@ -1,6 +1,7 @@
 const db = require("db"),
     util = require("device/util"),
-    config = require("config")
+    config = require("config"),
+    alerts = require("alerts")
 
 let active = []
 
@@ -60,6 +61,8 @@ async function checkNode(id) {
     if (rows) {
         // remove from our active array
         for (let i=0; i<rows.length; i++) {
+            alerts.sessionEnd(rows[i].id, id)
+            
             for (const device in active[id]) {
                 if (active[id][device].db_id == rows[i].id) {
                     delete active[id][device]
@@ -104,6 +107,8 @@ async function newDevice(id, dev) {
     if (util.filter(dev.mac)) return
 
     console.log("new node device ", id, dev.mac)
+    alerts.sessionStart(dev.mac, id)
+
     active[id][dev.mac] = {
         start: new Date(),
         end: new Date(),

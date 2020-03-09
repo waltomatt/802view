@@ -19,9 +19,17 @@ $(document).ready(function() {
         },
 
         methods: {
+            moment: function(d) {
+                return moment(d)
+            },
+            
             get: function() {
                 $.getJSON("/alerts/list", function(res) {
                     Alerts.list = res
+
+                    Alerts.list.sort((a, b) => {
+                        return (a.active_count > b.active_count)
+                    })
                 })
             },
 

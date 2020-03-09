@@ -1,6 +1,7 @@
 const db = require("db"),
     util = require("device/util"),
-    config = require("config")
+    config = require("config"),
+    alerts = require("alerts")
 
 let active = []
 
@@ -64,6 +65,8 @@ function findByID(id) {
 
 async function createActive(mac, con) {
     console.log("creating new active connection ", mac, con.mac)
+    alerts.connectionStart(mac, con)
+
     let connection = {
         index: active.length,
         src: mac,   // src & dest are kindof meaningless lables
@@ -132,6 +135,8 @@ async function checkExpired() {
 
     if (rows) {
         for (let i=0; i<rows.length; i++) {
+            alerts.connectionEnd(rows[i].id)
+            
             let con = findByID(rows[i].id)
             if (con) {
                 active.splice(con.index, 1)

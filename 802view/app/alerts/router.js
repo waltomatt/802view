@@ -11,7 +11,7 @@ router.get("/", (req, res) => {
 })
 
 router.get("/list", (req, res) => {
-    alerts.get().then((list) => {
+    alerts.update().then((list) => {
         res.json(list)
     })
 })
@@ -33,7 +33,7 @@ router.post("/create", (req, res) => {
     const allowedOn = ["session-start", "session-end", "connection-start", "connection-end"]
     const allowedType = ["mac", "org", "label"]
 
-    if (name.length && allowedOn.indexOf(on) > -1 && allowedType.indexOf(type) > -1 && data.length) {
+    //if (name.length && allowedOn.indexOf(on) > -1 && allowedType.indexOf(type) > -1 && data.length) {
         alerts.create(name, on, type, matches, data).then(() => {
             res.json({
                 status: "success"
@@ -44,12 +44,13 @@ router.post("/create", (req, res) => {
                 error: e.message
             })
         })
-    } else {
+    /*} else {
         res.json({
             status: "error",
             error: "invalid parameters"
         })
     }
+    */
 })
 
 module.exports = router
