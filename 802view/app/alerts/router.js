@@ -16,6 +16,30 @@ router.get("/list", (req, res) => {
     })
 })
 
+router.get("/list/:alert_id", (req, res) => {
+    alerts.get(parseInt(req.params.alert_id), req.query.clear).then((list) => {
+        res.json(list)
+    })
+})
+
+router.get("/active", (req, res) => {
+    alerts.getActive().then((list) => {
+        res.json(list)
+    })
+})
+
+router.post("/dismiss", (req, res) => {
+    let id = parseInt(req.body.id)
+
+    if (id) {
+        alerts.dismiss(id).then(() => {
+            res.json({
+                status: "success"
+            })
+        })
+    }
+})
+
 router.post("/create", (req, res) => {
     let name = req.body.name || "",
         on = req.body.on || "",

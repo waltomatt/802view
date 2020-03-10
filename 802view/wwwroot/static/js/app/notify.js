@@ -4,38 +4,41 @@ $(document).ready(function() {
     Notify = new Vue({
         el: "#notify",
         data: {
-            notifications: [
-                {
-                    img: "/static/img/icons/info.svg",
-                    type: "info",
-                    title: "Hi matt",
-                    body: "You're cool!"
-                }
+            alerts: [
+    
             ]
         },
 
         methods: {
             moment: function(d) {
                 return moment(d)
+            },
+
+            update: function() {
+                $.getJSON("/alerts/active", (data) => {
+                    Notify.alerts = data
+                    $(".toast").toast({autohide: false}).toast("show")
+                })
+            },
+            
+            dismissAlert: function(id) {
+                $.post("/alerts/dismiss", {id: id}, () => {
+                    for (let i=0; i<Notify.alerts.length; i++) {
+                        if (Notify.alerts[i].id == id)
+                            Notify.alerts.splice(i, 1)
+                    }
+                })
+            },
+
+            openDevice: function(dev) {
+                Device.set(dev)
+                Device.open()
             }
         }
     })
+
+    setInterval(Notify.update, 2000)
+    Notify.update()
 })
         
 
-/*
-function CreateNotification(type, body) {
-    let img = "/static/img/icons/"
-
-    if (type ==  "info")
-        img += "info.svg"
-    else if (type == "error")
-        img += "x.svg"
-    else if (type == "alert")
-        img += "bell.svg"
-
-
-    
-}   
-
-*/

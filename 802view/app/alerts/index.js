@@ -82,7 +82,7 @@ function check(on, mac) {
         const alert = list[i]
 
         if (alert.on == on) {
-            if (deviceMatches(alert.type, alert.data, mac))
+            if (deviceMatches(alert.type, alert.data, mac) == alert.matches)
                 triggered = alert
         }
 
@@ -90,9 +90,50 @@ function check(on, mac) {
             break
     }
 
-    console.log(triggered)
-
     return triggered
+}
+
+async function getAlerts(alert_id, clear) {
+    let {rows} = await db.query(`
+        SELECT *,
+            (SELECT "name" FROM "nodes" n WHERE n."id"=ta."node") AS node_name,
+            (SELECT "label" FROM "devices" d WHERE d."mac"=ta."device") AS device_label
+        FROM "triggered_alerts" ta
+        WHERE "alert"=$1
+        ORDER BY "active" DESC
+    `, [alert_id])
+
+    if (clear) {
+        await db.query(`
+        UPDATE "triggered_alerts"
+        SET "active"=false
+        WHERE "alert"=$1
+        `, [alert_id])
+    }
+
+    return rows
+}
+
+async function getActive() {
+    let {rows} = await db.query(`
+    SELECT *,
+        (SELECT "name" FROM "alerts" a WHERE a."id"=ta."alert") AS alert_name,
+        (SELECT "name" FROM "nodes" n WHERE n."id"=ta."node") AS node_name,
+        (SELECT "label" FROM "devices" d WHERE d."mac"=ta."device") AS device_label
+    FROM "triggered_alerts" ta
+    WHERE "active"=true
+    ORDER BY "active" DESC
+    `) 
+
+    return rows
+}
+
+async function dismiss(id) {
+    await db.query(`
+        UPDATE "triggered_alerts"
+        SET "active"=false
+        WHERE "id"=$1
+    `, [id])
 }
 
 // Triggering functions
@@ -160,6 +201,9 @@ update()
 
 module.exports = {
     list: list,
+    get: getAlerts,
+    getActive: getActive,
+    dismiss: dismiss,
     create: create,
     update: update,
     sessionStart: sessionStart,

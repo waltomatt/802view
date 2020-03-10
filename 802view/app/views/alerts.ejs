@@ -38,8 +38,7 @@
                                     <td v-if="!a.last_triggered">Never</td>
                                     <td>{{a.count}} <strong>({{a.active_count}})</strong></td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary">View alerts</button>
-                                        <button class="btn btn-sm btn-warning">Pause</button>
+                                        <button class="btn btn-sm btn-primary" v-on:click="showAlerts(a)">View alerts</button>
                                         <button class="btn btn-sm btn-danger">Delete</button>
                                     </td>
                                 </tr>
@@ -120,6 +119,42 @@
                 </div>
             </div>
 
+            <div class="modal fade" id="show">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                Alerts: {{current.name}}
+                            </h5>
+                        </div>
+            
+                        <div class="modal-body container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Device</th>
+                                        <th>Node</th>
+                                        <th>Comment</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <tr v-for="a in current.list" v-bind:class="{'table-danger': a.active}">
+                                        <td>{{moment(a.date).format("DD/MM/YYYY HH:mm:ss")}}</td>
+                                        <td><a href="#" v-on:click="showDevice(a.device)">{{a.device_label || a.device}}</a></td>
+                                        <td>{{a.node_name}}</td>
+                                        <td>{{a.comment}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <%- include("partials/device") %>
+        <%- include("partials/notify") %>
     </body>
 </html>
