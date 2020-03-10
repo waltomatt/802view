@@ -75,17 +75,12 @@ function deviceMatches(type, data, mac) {
     return match
 }
 
-console.log("deviceMatches?", deviceMatches("org", ["0495E6","0840F3","500FF5","502B73","58D9D5"], "50:0f:f5:ac:4f:59"))
-
 function check(on, mac) {
-    console.log(on, mac)
     let triggered = false
-    console.log(list)
 
     for (let i=0; i<list.length; i++) {
         const alert = list[i]
 
-        console.log(alert)
         if (alert.on == on) {
             if (deviceMatches(alert.type, alert.data, mac))
                 triggered = alert

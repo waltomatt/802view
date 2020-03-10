@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>802view - Login required</title>
+        <%- include("partials/includes") %>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="row justify-content-md-center ">
+                <div class="col-md-4 mt-5">
+                    <form action="/login" method="POST">
+                        <div class="form-group">
+                            <label>Password Required</label>
+                            <input class="form-control" placeholder="Password" type="password" name="password">
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

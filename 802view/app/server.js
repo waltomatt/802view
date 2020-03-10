@@ -1,6 +1,7 @@
 const express = require("express"),
     db = require("db"),
-    bodyParser = require("body-parser")
+    bodyParser = require("body-parser"),
+    session = require("express-session"),
     connections = require("device/connections")
     nodes = require("device/nodes")
 
@@ -14,12 +15,20 @@ app.use(bodyParser.urlencoded({
     extended: false
 }))
 
+app.use(session({
+    secret: "bZQpvzwtRkqqQTHHk9GX5uuy",
+    resave: false,
+    saveUninitialized: false
+}))
+
 app.use("/static", express.static(__dirname + "/../wwwroot/static"))
 app.use("/node", require("node/router"))
-app.use("/graph", require("graph/router"))
-app.use("/api", require("api/router"))
-app.use("/search", require("search/router"))
-app.use("/alerts", require("alerts/router"))
+app.use("/graph", require("login/check"), require("graph/router"))
+app.use("/api", require("login/check"), require("api/router"))
+app.use("/search", require("login/check"), require("search/router"))
+app.use("/alerts", require("login/check"), require("alerts/router"))
+
+app.use("/login", require("login/router"))
 
 connections.init()
 nodes.init()
