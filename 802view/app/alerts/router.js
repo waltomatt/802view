@@ -40,6 +40,18 @@ router.post("/dismiss", (req, res) => {
     }
 })
 
+router.post("/remove", (req, res) => {
+    let id = parseInt(req.body.id)
+
+    if (id) {
+        alerts.remove(id).then(() => {
+            res.json({
+                status: "success"
+            })
+        })
+    }
+})
+
 router.post("/create", (req, res) => {
     let name = req.body.name || "",
         on = req.body.on || "",

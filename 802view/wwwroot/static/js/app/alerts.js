@@ -49,6 +49,12 @@ $(document).ready(function() {
                 })
             },
 
+            deleteAlert: function(id) {
+                $.post("/alerts/remove", {id: id}, function() {
+                    
+                })
+            },
+
             showAlerts: function(alert) {
                 Alerts.current.name = alert.name
                 Alerts.current.id = alert.id

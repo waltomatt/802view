@@ -39,7 +39,7 @@
                                     <td>{{a.count}} <strong>({{a.active_count}})</strong></td>
                                     <td>
                                         <button class="btn btn-sm btn-primary" v-on:click="showAlerts(a)">View alerts</button>
-                                        <button class="btn btn-sm btn-danger">Delete</button>
+                                        <button class="btn btn-sm btn-danger" v-on:click="deleteAlert(a.id)">Delete</button>
                                     </td>
                                 </tr>
                             </tbody>

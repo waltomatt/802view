@@ -29,8 +29,6 @@ async function init() {
             db_id: parseInt(rows[i].id)
         })
     }
-
-    console.log("Restored " + rows.length + " active connections")
 }
 
 // this function searches all our active connections and sees if we have a pair between the two
@@ -64,7 +62,6 @@ function findByID(id) {
 }
 
 async function createActive(mac, con) {
-    console.log("creating new active connection ", mac, con.mac)
     alerts.connectionStart(mac, con)
 
     let connection = {
@@ -93,8 +90,12 @@ async function updateConnection(dev, con) {
     if (util.filter(dev.mac) || util.filter(con.mac)) return
 
     let connection = findActive(dev.mac, con.mac)
-    if (connection === false)
+    if (connection === false) {
+        console.log("updateConnection", dev.mac, con.mac, "CREATE")
         connection = await createActive(dev.mac, con)
+    } else {
+        console.log("updateConnection", dev.mac, con.mac, "UPDATE")
+    }
     
     if (connection.src == dev.mac) {
         connection.up_packets += con.count
@@ -111,7 +112,7 @@ async function updateConnection(dev, con) {
         connection.last_update = new Date()
         db.query(`
             UPDATE connections
-            SET up_packets=$1, down_packets=$2, up_data=$3, down_data=$4, end_time=NOW()
+            SET up_packets=$1, down_packets=$2, up_data=$3, down_data=$4, end_time=NOW(), active=true
             WHERE id=$5
         `, [connection.up_packets, connection.down_packets, connection.up_data, connection.down_data, connection.db_id])
     }
@@ -136,7 +137,7 @@ async function checkExpired() {
     if (rows) {
         for (let i=0; i<rows.length; i++) {
             alerts.connectionEnd(rows[i].id)
-            
+
             let con = findByID(rows[i].id)
             if (con) {
                 active.splice(con.index, 1)

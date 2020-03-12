@@ -136,6 +136,13 @@ async function dismiss(id) {
     `, [id])
 }
 
+async function remove(id) {
+    await db.query(`
+    DELETE FROM "alerts"
+    WHERE "id"=$1
+    `, [id])
+}
+
 // Triggering functions
 
 function triggerAlert(alert_id, device, node, comment) {
@@ -205,6 +212,7 @@ module.exports = {
     getActive: getActive,
     dismiss: dismiss,
     create: create,
+    remove: remove,
     update: update,
     sessionStart: sessionStart,
     sessionEnd: sessionEnd,

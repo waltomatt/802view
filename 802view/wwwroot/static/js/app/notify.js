@@ -30,6 +30,8 @@ $(document).ready(function() {
                 })
             },
 
+            
+
             openDevice: function(dev) {
                 Device.set(dev)
                 Device.open()
