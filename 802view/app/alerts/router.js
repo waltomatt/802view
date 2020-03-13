@@ -56,7 +56,8 @@ router.post("/create", (req, res) => {
     let name = req.body.name || "",
         on = req.body.on || "",
         type = req.body.type || "",
-        matches = (req.body.matches == "true")
+        matches = (req.body.matches == "true"),
+        ap = (req.body.ap == "true")
 
     let data
     if (type == "mac")
@@ -70,7 +71,7 @@ router.post("/create", (req, res) => {
     const allowedType = ["mac", "org", "label"]
 
     //if (name.length && allowedOn.indexOf(on) > -1 && allowedType.indexOf(type) > -1 && data.length) {
-        alerts.create(name, on, type, matches, data).then(() => {
+        alerts.create(name, on, type, matches, data, ap).then(() => {
             res.json({
                 status: "success"
             })

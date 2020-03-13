@@ -12,7 +12,8 @@ $(document).ready(function() {
                 matches: true,
                 org: false,
                 mac: "",
-                label: ""
+                label: "",
+                ap: false
             },
 
             current: {
@@ -51,7 +52,7 @@ $(document).ready(function() {
 
             deleteAlert: function(id) {
                 $.post("/alerts/remove", {id: id}, function() {
-                    
+
                 })
             },
 

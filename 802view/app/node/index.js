@@ -17,7 +17,8 @@ function processPacket(id, msg, ws) {
             mac: dev.m,
             rssi: -dev.r,
             is_ap: dev.a,
-            connections: []
+            connections: [],
+            probes: dev.p
         }
 
         if (dev.s) {

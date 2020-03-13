@@ -34,6 +34,12 @@ async function updateDevice(id, device) {
         SET last_seen=NOW()
     `, [device.mac, device.is_ap])
 
+    if (device.probes && device.probes.length) {
+        for (let i=0; i<device.probes.length; i++) {
+            db.query(`INSERT INTO probes("device", "ssid") VALUES($1, $2) ON CONFLICT DO NOTHING`, [device.mac, device.probes[i]])
+        }
+    }
+
     if (device.is_ap)
         await db.query(`
             UPDATE devices SET is_ap=true WHERE mac=$1

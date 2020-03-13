@@ -3,7 +3,7 @@ const db = require("db"),
 
 let list = []
 
-async function create(name, on, type, matches, data) {
+async function create(name, on, type, matches, data, ap) {
     if (type == "org") {
         const orgs = search.getActiveOrgs()
 
@@ -15,9 +15,11 @@ async function create(name, on, type, matches, data) {
     }
 
     await db.query(`
-    INSERT INTO "alerts" ("name", "on", "type", "data", "matches")
-    VALUES ($1, $2, $3, $4, $5)
-    `, [name, on, type, data, matches])
+    INSERT INTO "alerts" ("name", "on", "type", "data", "matches", "ap")
+    VALUES ($1, $2, $3, $4, $5, $6)
+    `, [name, on, type, data, matches, ap])
+
+    update()
 }
 
 
@@ -41,6 +43,7 @@ async function update() {
             matches: rows[i].matches,
             data: rows[i].data.split(","),
             count: rows[i].count,
+            ap: rows[i].ap,
             active_count: rows[i].active_count,
             last_triggered: rows[i].last_triggered
         })
@@ -49,6 +52,14 @@ async function update() {
     list = newList
 
     return newList
+}
+
+async function isAP(device) {
+    let {rows} = await db.query(`
+    SELECT "mac" FROM "devices" WHERE "mac"=$1 AND "is_ap"=true
+    `, $device)
+
+    return (rows.length > 0)
 }
 
 function deviceMatches(type, data, mac) {
@@ -82,8 +93,10 @@ function check(on, mac) {
         const alert = list[i]
 
         if (alert.on == on) {
-            if (deviceMatches(alert.type, alert.data, mac) == alert.matches)
-                triggered = alert
+            if (deviceMatches(alert.type, alert.data, mac) == alert.matches) {
+                if (!alert.ap || isAP(mac))
+                    triggered = alert
+            }
         }
 
         if (triggered != false)
