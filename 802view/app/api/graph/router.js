@@ -159,13 +159,11 @@ async function generateNodeGraph(node) {
         firstDate = new Date(q.rows[0].start)
 
     const {rows} = await db.query(`
-    SELECT d AS date, COUNT(nd.*) AS value
-    FROM "node_devices" nd
-    JOIN generate_series($2, now(), interval '60 minute') AS d
-    ON d >= nd."start" AND d <= nd."end"
-    WHERE nd.node=$1
-    GROUP BY d
-    ORDER BY d
+    SELECT date.*, COUNT(nd.*) AS value 
+    FROM generate_series($2, now(), interval '60 minute') date
+    LEFT OUTER JOIN "node_devices" nd ON date >= nd."start" AND date <= nd."end" AND nd."node"=$1
+    GROUP BY date
+    ORDER BY date
     `, [node, firstDate])
 
     return rows

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>802view</title>
+        <%- include("partials/includes") %>
+        <script src="/static/js/app/search.js"></script>
+        <link rel="stylesheet" href="/static/css/bootstrap-select.min.css">
+        <script type="text/javascript" src="/static/js/external/bootstrap-select.min.js"></script>
+    </head>
+
+    <body>
+        <%- include("partials/nav") %>
+        <div id="stats">
+            <div class="container">
+                <div class="row mt-4">
+                    <div class="col-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>{{stats.nodes}}</h2>
+                                <p class="text-muted">Nodes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>{{stats.devices}}</h2>
+                                <p class="text-muted">Devices</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>{{stats.sessions}}</h2>
+                                <p class="text-muted">Sessions</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h2>{{stats.connections}}</h2>
+                                <p class="text-muted">Connections</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="/static/js/app/stats.js"></script>
+    </body>
+</html> 
