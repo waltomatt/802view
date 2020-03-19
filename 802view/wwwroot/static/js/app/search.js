@@ -9,6 +9,7 @@ $(document).ready(function() {
                 type: "devices",
                 search: "mac",
                 search2: "mac",
+                label: "",
                 mac: "",
                 mac2: "",
                 org: -1,
@@ -83,9 +84,11 @@ $(document).ready(function() {
 
                 if (Search.query.search == "mac")
                     query.mac = Search.query.mac
-                else
+                else if (Search.query.search == "org")
                     query.org = Search.query.org
-
+                else
+                    query.label = Search.query.label
+                
                 return query
             },
 
@@ -103,11 +106,12 @@ $(document).ready(function() {
                 if (Search.query.filter.max_date)
                     query.max_date = Search.query.filter.max_date.getTime() / 1000
 
-
                 if (Search.query.search == "mac")
                     query.mac = Search.query.mac
-                else
+                else if (Search.query.search == "org")
                     query.org = Search.query.org
+                else
+                    query.label = Search.query.label
 
                 return query
             },
@@ -132,10 +136,12 @@ $(document).ready(function() {
                 else
                     query.org = Search.query.org
 
-                if (Search.query.search2 == "mac")
-                    query.mac2 = Search.query.mac2
+                if (Search.query.search == "mac")
+                    query.mac = Search.query.mac
+                else if (Search.query.search == "org")
+                    query.org = Search.query.org
                 else
-                    query.org2 = Search.query.org2
+                    query.label = Search.query.label
 
                 return query
             },

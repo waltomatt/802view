@@ -49,8 +49,6 @@ async function update() {
         })
     }
 
-    console.log(newList)
-
     list = newList
 
     return newList
@@ -70,7 +68,7 @@ function deviceMatches(type, data, mac) {
     let match = false
     if (type == "mac") {        
         for (let i=0; i<data.length; i++) {
-            if (mac.indexOf(data.toLowerCase().replace(new RegExp(":", "g"), "")) > -1) {
+            if (mac.indexOf(data[i].toLowerCase().replace(new RegExp(":", "g"), "")) > -1) {
                 match = true
                 break
             }
@@ -93,7 +91,6 @@ async function check(on, mac) {
 
     for (let i=0; i<list.length; i++) {
         const alert = list[i]
-        console.log(alert)
         if (alert.on == on) {
             if (deviceMatches(alert.type, alert.data, mac) == alert.matches) {
                 if (alert.ap == false) {
@@ -172,9 +169,9 @@ function triggerAlert(alert_id, device, node, comment) {
     `, [alert_id, device, node, comment])
 }
 
-function sessionStart(mac, node) {
-    let alert = check("session_start", mac)
-
+async function sessionStart(mac, node) {
+    let alert = await check("session_start", mac)
+    console.log(alert)
     if (alert) {
         triggerAlert(alert.id, mac, node, "")
     }
@@ -186,20 +183,20 @@ async function sessionEnd(db_id, node) {
     WHERE "id"=$1`, [db_id])
 
     if (rows.length) {
-        let alert = check("session_end", rows[0].device)
+        let alert = await check("session_end", rows[0].device)
         if (alert) {
             triggerAlert(alert.id, rows[0].device, rows[0].node, "SessionID:" + rows[0].id)
         }
     }
 } 
 
-function connectionStart(mac, con) {
-    let alert = check("connection_start", mac)
+async function connectionStart(mac, con) {
+    let alert = await check("connection_start", mac)
     if (alert) {
         triggerAlert(alert.id, mac, null, "connecting to: " + con.mac)
     }
 
-    let alert2 = check("connection_start", con.mac)
+    let alert2 = await check("connection_start", con.mac)
     if (alert) {
         triggerAlert(alert.id, con.mac, null, "connecting to: " + mac)
     }
@@ -211,9 +208,9 @@ async function connectionEnd(db_id) {
     WHERE "id"=$1`, [db_id])
 
     if (rows.length) {
-        let alert = check("connection_end", rows[0].src)
-        let alert2 = check("connection_end", rows[0].dst)
-        
+        let alert = await check("connection_end", rows[0].src)
+        let alert2 = await check("connection_end", rows[0].dst)
+
         if (alert) {
             triggerAlert(alert.id, rows[0].src, null, "connected to: " + rows[0].dst)
         }

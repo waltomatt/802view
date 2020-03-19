@@ -90,15 +90,22 @@ function macQueryPart(mac, column, queryParams) {
     return query
 }
 
-function getQueryPart(searchType, mac, org, column, queryParams) {
+function labelQueryPart(label, queryParams) {
+    queryParams.push("%"+label+"%")
+    return `LOWER("label") LIKE $${queryParams.length}`
+}
+ 
+function getQueryPart(searchType, mac, org, label, column, queryParams) {
     if (searchType == "org") {
         return orgQueryPart(org, column)
     } else if (searchType == "mac") {
         return macQueryPart(mac, column, queryParams)
+    } else if (searchType == "label") {
+        return labelQueryPart(label, queryParams)
     }
 }
 
-async function device(searchType, mac, org, only_ap, active, sort, page) {
+async function device(searchType, mac, org, label, only_ap, active, sort, page) {
     
     let query = `
         SELECT COUNT(*) OVER (), *,
@@ -108,7 +115,8 @@ async function device(searchType, mac, org, only_ap, active, sort, page) {
 
     let queryParams = []
 
-    query += getQueryPart(searchType, mac, org, "mac", queryParams)
+    console.log(searchType, label)
+    query += getQueryPart(searchType, mac, org, label, "mac", queryParams)
 
     if (only_ap) {
         query += " AND is_ap=true"
@@ -125,6 +133,7 @@ async function device(searchType, mac, org, only_ap, active, sort, page) {
     query += " LIMIT 25 OFFSET $" + (queryParams.length+1)
     queryParams.push(page * 25)
 
+    console.log(query)
     let {rows} = await db.query(query, queryParams)
 
     if (!active) {
@@ -140,7 +149,7 @@ async function device(searchType, mac, org, only_ap, active, sort, page) {
     }
 }
 
-async function sessions(searchType, mac, org, min_date, max_date, nodes, active, sort, page) {
+async function sessions(searchType, mac, org, label, min_date, max_date, nodes, active, sort, page) {
     let query = `
         SELECT COUNT(*) OVER (), *, 
             (SELECT "label" FROM "devices" WHERE devices."mac" = nd."device"),
@@ -150,7 +159,7 @@ async function sessions(searchType, mac, org, min_date, max_date, nodes, active,
 
     let queryParams = []
 
-    query += getQueryPart(searchType, mac, org, "device", queryParams)
+    query += getQueryPart(searchType, mac, org, label, "device", queryParams)
 
     if (min_date && max_date) {
         query +=  ` AND ("start_time" < $${queryParams.length+1} AND "end_time" > $${queryParams.length+2})`
@@ -196,7 +205,7 @@ async function sessions(searchType, mac, org, min_date, max_date, nodes, active,
 }
 
 
-async function connections(searchType, mac, org, searchType2, mac2, org2, min_date, max_date, active, sort, page) {
+async function connections(searchType, mac, org, label, searchType2, mac2, org2, label2, min_date, max_date, active, sort, page) {
     let query = `
         SELECT COUNT(*) OVER (), *, 
             (SELECT "label" FROM "devices" WHERE devices."mac" = c."src") AS src_label, 
@@ -210,8 +219,8 @@ async function connections(searchType, mac, org, searchType2, mac2, org2, min_da
     // IF SRC=A AND DST=B
     // OR DST=A AND SRC=B
 
-    query += `(${getQueryPart(searchType, mac, org, "src", queryParams)} AND ${getQueryPart(searchType2, mac2, org2, "dst", queryParams)}) OR `
-    query += `(${getQueryPart(searchType, mac, org, "dst", queryParams)} AND ${getQueryPart(searchType2, mac2, org2, "src", queryParams)})`
+    query += `(${getQueryPart(searchType, mac, org, label, "src", queryParams)} AND ${getQueryPart(searchType2, mac2, org2, label2, "dst", queryParams)}) OR `
+    query += `(${getQueryPart(searchType, mac, org, label, "dst", queryParams)} AND ${getQueryPart(searchType2, mac2, org2, label2, "src", queryParams)})`
 
     if (min_date && max_date) {
         query +=  ` AND ("start_time" < $${queryParams.length+1} AND "end_time" > $${queryParams.length+2})`
