@@ -245,6 +245,12 @@ function initNetworkView() {
             // set vis.js specific properties here
             node.shape = "circle"
 
+            if (node.online) {
+                node.color = "#007bff"
+            } else {
+                node.color = "#6c757d"
+            }
+
             Graph.nodeDataSet.add(node)
         }
     })

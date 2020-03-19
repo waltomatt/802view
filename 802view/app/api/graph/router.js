@@ -1,6 +1,7 @@
 const express = require("express"),
     db = require("db"),
-    oui = require("oui")
+    oui = require("oui"),
+    _node = require("node")
 
 const router = express.Router()
 
@@ -21,6 +22,7 @@ async function getActiveNodes() {
         node.id = rows[i].id
         node.label = rows[i].name
         node.value = parseInt(rows[i].devices)
+        node.online = (_node.online.indexOf(node.id) > -1)
         nodes.push(node)
     }
     return nodes
