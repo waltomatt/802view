@@ -1,5 +1,5 @@
 const db = require("db"),
-    nodes = require("nodes")
+    node = require("node")
 
 async function getNodeList() {
     let {rows} = await db.query(`
@@ -8,7 +8,7 @@ async function getNodeList() {
     `)
 
     for (let i=0; i<rows.length; i++) {
-        rows[i].online = (nodes.online.indexOf(rows[i].id) > -1)
+        rows[i].online = (node.online.indexOf(rows[i].id) > -1)
     }
 
     return rows
