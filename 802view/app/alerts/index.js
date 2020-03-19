@@ -49,6 +49,8 @@ async function update() {
         })
     }
 
+    console.log(newList)
+
     list = newList
 
     return newList
@@ -91,10 +93,10 @@ function check(on, mac) {
 
     for (let i=0; i<list.length; i++) {
         const alert = list[i]
-
+        console.log(alert)
         if (alert.on == on) {
             if (deviceMatches(alert.type, alert.data, mac) == alert.matches) {
-                if (!alert.ap || isAP(mac))
+                if (alert.ap == false || (await isAP(mac)) == true)
                     triggered = alert
             }
         }

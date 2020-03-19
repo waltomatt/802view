@@ -54,6 +54,7 @@ async function getGraphData(node) {
 
         // TODO: merge this functionality with the other graph stuff
 
+
         if (dateQuery.rows.length) {
             let minDate = dateQuery.rows[0].start
 
@@ -64,10 +65,14 @@ async function getGraphData(node) {
             GROUP BY x
             ORDER BY x
             `, [node, minDate])
+
+            console.log(rows)
             
             return rows
+        } else {
+            return []
         }
-    
+     
     } else {
         let dateQuery = await db.query(`
             SELECT "start" FROM "node_devices"
@@ -87,6 +92,8 @@ async function getGraphData(node) {
             `, [minDate])
             
             return rows
+        } else {
+            return []
         }
     }
 }
