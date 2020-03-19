@@ -10,6 +10,7 @@ async function getActiveNodes() {
     (SELECT COUNT(*) FROM node_devices WHERE node=n.id AND active=true) AS devices
     FROM 
         "nodes" n
+    ORDER BY n.id
     `)
 
     let nodes = []
