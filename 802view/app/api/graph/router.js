@@ -92,7 +92,7 @@ async function getDevices(nodeID, date) {
             device.shape = "box"
         }
         
-        if (oui(device.id))
+        //if (oui(device.id))
             devices.push(device)
     }
 
