@@ -62,7 +62,7 @@ async function checkNode(id) {
         // remove from our active array
         for (let i=0; i<rows.length; i++) {
             alerts.sessionEnd(rows[i].id, id)
-            
+
             for (const device in active[id]) {
                 if (active[id][device].db_id == rows[i].id) {
                     delete active[id][device]

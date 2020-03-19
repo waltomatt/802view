@@ -69,13 +69,61 @@ $(document).ready(function() {
                 Graph.nodeGraphData = []
                 $.getJSON("/api/graph/node/" + Graph.selectedNode.id, (data) => {
                     for (let i=0; i<data.length; i++) {
-                        Graph.nodeGraphData.push([new Date(data[i].date), parseInt(data[i].value)])
+                        Graph.nodeGraphData.push({
+                            x: new Date(data[i].date), 
+                            y: parseInt(data[i].value)
+                        })
                     }
 
-                    Graph.nodeGraph = new Dygraph($("#node-graph")[0], Graph.nodeGraphData, {
-                        legend: "always",
-                        ylabel: "Number of devices"
-                    })
+                    let options = {
+                        series: [{
+                            name: 'Devices',
+                            data: Graph.nodeGraphData
+                        }],
+
+                        chart: {
+                            type: 'area',
+                            stacked: false,
+                            height: 350,
+                            zoom: {
+                                type: 'x',
+                                enabled: true,
+                                autoScaleYaxis: true
+                            },
+                            toolbar: {
+                                autoSelected: 'zoom'
+                            }
+                        },
+
+                        stroke: {
+                            width: 1
+                        },
+
+                        dataLabels: {
+                            enabled: false
+                        },
+                        markers: {
+                            size: 0,
+                        },
+                    
+                
+                        xaxis: {
+                            type: 'datetime',
+                        },
+                        tooltip: {
+                            shared: false,
+                            x: {
+                                show: true,
+                                format: "dd/MM/yyyy HH:MM"
+                            }
+                        }
+                    }
+                    
+                    if (Graph.nodeGraph)
+                        Graph.nodeGraph.destroy()
+
+                    Graph.nodeGraph = new ApexCharts($("#node-graph")[0], options)
+                    Graph.nodeGraph.render()
                 })
             }
         }

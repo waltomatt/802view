@@ -150,7 +150,7 @@ async function getConnections(nodeID, date) {
 async function generateNodeGraph(node) {
     const {rows} = await db.query(`
     SELECT date.*, COUNT(nd.*) AS value 
-    FROM generate_series(now() - INTERVAL '24 hours', now(), interval '10 minute') date
+    FROM generate_series(now() - INTERVAL '24 hours', now() - INTERVAL '10 minute' , interval '10 minute') date
     LEFT OUTER JOIN "node_devices" nd ON date >= nd."start" AND date <= nd."end" AND nd."node"=$1
     GROUP BY date
     ORDER BY date

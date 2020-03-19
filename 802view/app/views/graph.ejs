@@ -3,8 +3,8 @@
     <head>
         <title>802view</title>
         <%- include("partials/includes") %>
-        <script type="text/javascript" src="https://unpkg.com/vis-util@latest"></script>
-        <script type="text/javascript" src="https://unpkg.com/vis-data@latest"></script>
+        <script type="text/javascript" src="/static/js/external/vis-util.min.js"></script>
+        <script type="text/javascript" src="/static/js/external/vis-data.min.js"></script>
     </head>
 
     <body>
@@ -145,18 +145,16 @@
         <%- include("partials/notify") %>
     </body>
 
-    <script type="text/javascript" src="https://unpkg.com/moment@latest"></script>
-    <script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/peer/umd/vis-timeline-graph2d.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vis-timeline/styles/vis-timeline-graph2d.min.css" />
-    <script type="text/javascript" src="https://unpkg.com/vis-network@latest/peer/umd/vis-network.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/vis-network/styles/vis-network.min.css" />
-    <script type="text/javascript" src="/static/js/external/dygraph.min.js"></script>
-
+    <script type="text/javascript" src="/static/js/external/vis-timeline.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/vis-timeline.min.css" />
+    <script type="text/javascript" src="/static/js/external/vis-network.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/vis-network.min.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/flatpickr.min.css">
     <script src="/static/js/external/flatpickr.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/graph.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/dygraph.css">
+    <script type="text/javascript" src="/static/js/external/apexcharts.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/apexcharts.css">
 
+    <link rel="stylesheet" type="text/css" href="/static/css/graph.css">
     <script src="/static/js/app/graph.js"></script>
     
 </html>

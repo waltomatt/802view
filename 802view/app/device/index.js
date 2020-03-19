@@ -22,6 +22,8 @@ function updateSSID(device) {
 async function updateDevice(id, device) {
     // we don't want multicast or broadcast addresses
     if (util.filter(device.mac)) return
+    
+    if (oui(device.mac) == null) return
 
     await db.query(`
     INSERT INTO devices(
