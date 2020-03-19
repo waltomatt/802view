@@ -28,6 +28,7 @@ app.use("/api", require("login/check"), require("api/router"))
 app.use("/search", require("login/check"), require("search/router"))
 app.use("/alerts", require("login/check"), require("alerts/router"))
 app.use("/stats", require("login/check"), require("stats/router"))
+app.use("/manage", require("login/check"), require("manage/router"))
 app.use("/login", require("login/router"))
 
 app.get("/", (req, res) => {

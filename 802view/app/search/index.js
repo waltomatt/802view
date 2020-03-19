@@ -150,7 +150,7 @@ async function sessions(searchType, mac, org, min_date, max_date, nodes, active,
 
     let queryParams = []
 
-    query += getQueryPart(saerchType, mac, org, "device", queryParams)
+    query += getQueryPart(searchType, mac, org, "device", queryParams)
 
     if (min_date && max_date) {
         query +=  ` AND ("start_time" < $${queryParams.length+1} AND "end_time" > $${queryParams.length+2})`
