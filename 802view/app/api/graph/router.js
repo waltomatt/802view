@@ -1,5 +1,7 @@
 const express = require("express"),
-    db = require("db")
+    db = require("db"),
+    oui = require("oui")
+
 const router = express.Router()
 
 // TODO: move logic into seperate functions
@@ -88,8 +90,8 @@ async function getDevices(nodeID, date) {
             device.shape = "box"
         }
         
-        
-        devices.push(device)
+        if (oui(device.id))
+            devices.push(device)
     }
 
     return devices
@@ -146,26 +148,13 @@ async function getConnections(nodeID, date) {
 }
 
 async function generateNodeGraph(node) {
-    const q = await db.query(`
-    SELECT "start"
-    FROM "node_devices"
-    WHERE "node"=$1
-    ORDER BY "start" ASC
-    LIMIT 1
-    `, [node])
-
-    let firstDate = new Date()
-
-    if (q.rows && q.rows.length)
-        firstDate = new Date(q.rows[0].start)
-
     const {rows} = await db.query(`
     SELECT date.*, COUNT(nd.*) AS value 
-    FROM generate_series($2, now(), interval '60 minute') date
+    FROM generate_series(now() - INTERVAL '24 hours', now(), interval '10 minute') date
     LEFT OUTER JOIN "node_devices" nd ON date >= nd."start" AND date <= nd."end" AND nd."node"=$1
     GROUP BY date
     ORDER BY date
-    `, [node, firstDate])
+    `, [node])
 
     return rows
 }

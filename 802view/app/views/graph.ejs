@@ -51,7 +51,6 @@
                                     <span v-if="selectedNode.online" class="badge badge-success">online</span>
                                     <span v-if="!selectedNode.online" class="badge badge-secondary">offline</span>
                                 </h5>
-                                <p>{{selectedNode.description}}</p>
                                 <p class="m-0" v-if="selectedNode.last_seen"><strong>Last seen:</strong> {{moment(selectedNode.last_seen).fromNow()}}</p>
                                 <p class="m-0"><strong>Number of devices:</strong> {{selectedNode.devices}} ({{selectedNode.ap_count}} APs)</p>
                                 <p class="text-muted m-0 mt-3">{{selectedNode.ip}}</p>

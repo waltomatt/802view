@@ -253,6 +253,7 @@ function updateGraph() {
     }
 
     $.getJSON("/api/graph/" + Graph.graphEndpoint, (json) => {
+        if (Graph.view != "node") return
         Graph.lastUpdate = new Date()
         
         let newNodes = []
