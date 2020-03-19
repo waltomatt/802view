@@ -88,7 +88,7 @@ function deviceMatches(type, data, mac) {
     return match
 }
 
-function check(on, mac) {
+async function check(on, mac) {
     let triggered = false
 
     for (let i=0; i<list.length; i++) {
@@ -96,8 +96,13 @@ function check(on, mac) {
         console.log(alert)
         if (alert.on == on) {
             if (deviceMatches(alert.type, alert.data, mac) == alert.matches) {
-                if (alert.ap == false || (await isAP(mac)) == true)
+                if (alert.ap == false) {
                     triggered = alert
+                } else {
+                    let is_ap = await isAP(mac)
+                    if (is_ap)
+                        triggered = alert
+                }
             }
         }
 
