@@ -93,7 +93,7 @@ async function update(id, devices) {
 
         // check in range
         if (dev.rssi) {
-            if (!active[id][dev.mac] || new Date().getTime() - active[id][dev.mac].last_update.getTime() > (config.nodeUpdateInterval * 1000)) {
+            if (!active[id][dev.mac]) {
                 newDevice(id, dev)
             } else {
                 updateDevice(id, dev)
