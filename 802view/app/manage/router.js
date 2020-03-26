@@ -1,11 +1,12 @@
 const express = require("express"),
     manage = require("manage"),
-    nodes = require("node")
+    nodes = require("node"),
+    config = require("config.json")
 
 const router = express.Router()
 
 router.get("/", (req, res) => {
-    res.render("manage")
+    res.render("manage", {api_key: config.api_key})
 })
 
 router.get("/nodes/list", (req, res) => {

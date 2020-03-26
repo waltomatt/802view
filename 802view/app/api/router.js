@@ -101,5 +101,10 @@ router.get("/session/:session", (req, res, next) => {
     }
 })
 
+// External API
+
+
+router.use("/v1", require("api/v1/router"))
+
 
 module.exports = router

@@ -51,6 +51,16 @@
                         <button class="btn btn-primary" v-on:click="createNode">Create new node</button>
                     </div>
                 </div>
+
+                <div class="card mt-3">
+                    <h5 class="card-header">API Key</h5>
+
+                    <div class="card-body">
+                        <span v-if="showApiKey"><%=api_key%></span>
+                        <span v-if="!showApiKey">************</span>
+                        <button class="btn btn-secondary btn-sm ml-3" v-if="!showApiKey" v-on:click="showApiKey=true">Show API key</button>
+                    </div>
+                </div>
             </div>
 
             <div class="modal fade" id="node-edit" tabindex="-1" role="dialog">

@@ -6,6 +6,8 @@
         "database": "802view"
     },
 
+    "api_key": "abc123",
+
     "wsKeepAliveTime": 30,
 
     "connectionUpdateInterval": 30 ,
